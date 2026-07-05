@@ -131,3 +131,6 @@ Provide a severity (e.g., Low, Medium, High, Critical), a general category (e.g.
     }
   }
 }
+
+export const aiService = new AIService();
+
