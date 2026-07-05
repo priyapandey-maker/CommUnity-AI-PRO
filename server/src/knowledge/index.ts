@@ -1,2 +1,2 @@
-// Placeholder for knowledge-base documents / vector store references
-export {};
+// Knowledge Layer services and types
+export * from './knowledgeService';

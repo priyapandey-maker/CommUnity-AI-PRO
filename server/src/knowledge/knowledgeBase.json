@@ -1,0 +1,25 @@
+{
+  "locations": {
+    "default": {
+      "schoolZone": false,
+      "recentRain": false,
+      "maintenanceHistory": 0,
+      "crewAvailable": true,
+      "criticalInfrastructure": false
+    },
+    "school-street": {
+      "schoolZone": true,
+      "recentRain": true,
+      "maintenanceHistory": 3,
+      "crewAvailable": true,
+      "criticalInfrastructure": false
+    },
+    "broadway-ave": {
+      "schoolZone": false,
+      "recentRain": true,
+      "maintenanceHistory": 1,
+      "crewAvailable": true,
+      "criticalInfrastructure": true
+    }
+  }
+}
