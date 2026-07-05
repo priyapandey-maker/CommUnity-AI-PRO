@@ -55,3 +55,27 @@ export async function submitIncident(
   const { data } = await apiClient.post<IncidentApiResponse>('/incident', body);
   return data;
 }
+
+export interface DecisionResponse {
+  id: string;
+  issueType: string;
+  severity: string;
+  urgency: string;
+  affectedAsset: string;
+  possibleHazards: string[];
+  confidenceReason?: string;
+  summary: string;
+}
+
+/**
+ * GET /decision/:id
+ *
+ * Fetches the AI analysis decision from the backend.
+ *
+ * @throws {ApiError} On network failure or non-2xx response.
+ */
+export async function getDecision(id: string): Promise<DecisionResponse> {
+  const { data } = await apiClient.get<DecisionResponse>(`/decision/${id}`);
+  return data;
+}
+
