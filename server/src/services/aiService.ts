@@ -3,10 +3,10 @@ import { INCIDENT_UNDERSTANDING_SYSTEM_PROMPT } from '../prompts';
 
 // ── Simple Logger ─────────────────────────────────────────
 const aiLogger = {
-  info: (msg: string, meta?: any) => {
+  info: (msg: string, meta?: Record<string, unknown>) => {
     console.log(`[AI INFO] ${msg}`, meta ? JSON.stringify(meta) : '');
   },
-  error: (msg: string, err?: any) => {
+  error: (msg: string, err?: unknown) => {
     console.error(`[AI ERROR] ${msg}`, err instanceof Error ? err.message : err);
   },
 };
@@ -55,7 +55,7 @@ export class AIService {
 Description: ${params.description}
 Location: ${params.location}`;
 
-      const contents: any[] = [
+      const contents: Array<Record<string, unknown>> = [
         { text: userPrompt }
       ];
 
@@ -153,9 +153,10 @@ Location: ${params.location}`;
       
       return parsedResult;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       aiLogger.error('Failed to analyze incident', error);
-      throw new Error(`AI Analysis failed: ${error.message || 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`AI Analysis failed: ${errorMessage}`);
     }
   }
 }
