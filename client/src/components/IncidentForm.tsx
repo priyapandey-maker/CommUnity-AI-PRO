@@ -6,6 +6,7 @@ import { Textarea } from './ui/Textarea';
 import Button from './Button';
 import FormField from './FormField';
 import ImageUpload from './ImageUpload';
+import { useSubmitIncident } from '@/hooks';
 
 /* ── Types ─────────────────────────────────────────────── */
 export interface IncidentFormValues {
@@ -31,7 +32,7 @@ const RULES = {
 export default function IncidentForm() {
   const navigate = useNavigate();
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isLoading, error, clearError, submit } = useSubmitIncident();
 
   const {
     control,
@@ -42,12 +43,12 @@ export default function IncidentForm() {
 
   const descriptionValue = watch('description', '');
 
-  const onSubmit = (data: IncidentFormValues) => {
-    setIsSubmitting(true);
-    const payload = { ...data, image: imageFile };
-    // No API yet — log form data as instructed
-    console.log('[IncidentForm] Submitted payload:', payload);
-    setTimeout(() => setIsSubmitting(false), 800);
+  const onSubmit = async (data: IncidentFormValues) => {
+    await submit({
+      description: data.description,
+      location:    data.location,
+      image:       imageFile,
+    });
   };
 
   return (
@@ -74,10 +75,10 @@ export default function IncidentForm() {
               error={errors.description?.message}
               hint="Describe what happened — include as much detail as possible."
               fullWidth
+              onChange={(e) => { clearError(); field.onChange(e); }}
             />
           )}
         />
-        {/* Character counter — positioned below the textarea, right-aligned */}
         <span
           className={[
             'block text-right text-xs tabular-nums mt-1 pr-1',
@@ -104,6 +105,7 @@ export default function IncidentForm() {
             error={errors.location?.message}
             hint="Street address, neighbourhood, or landmark."
             fullWidth
+            onChange={(e) => { clearError(); field.onChange(e); }}
           />
         )}
       />
@@ -117,12 +119,49 @@ export default function IncidentForm() {
         <ImageUpload onFileChange={setImageFile} />
       </FormField>
 
+      {/* ── Submission error banner ───────────────────── */}
+      {error && (
+        <div
+          role="alert"
+          id="incident-submit-error"
+          className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-900/10 px-4 py-3"
+        >
+          <svg
+            aria-hidden="true"
+            className="mt-0.5 w-4 h-4 shrink-0 text-red-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm-.75-11a.75.75 0 0 1 1.5 0v4a.75.75 0 0 1-1.5 0V7zm.75 7a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-red-400">Submission failed</p>
+            <p className="text-xs text-red-300/80 mt-0.5">{error}</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss error"
+            onClick={clearError}
+            className="text-red-500 hover:text-red-300 transition-colors"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* ── Actions ──────────────────────────────────── */}
       <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-gray-800">
         <Button
           id="incident-cancel-btn"
           type="button"
           variant="ghost"
+          disabled={isLoading}
           onClick={() => navigate('/')}
         >
           Cancel
@@ -131,9 +170,9 @@ export default function IncidentForm() {
           id="incident-submit-btn"
           type="submit"
           variant="primary"
-          disabled={isSubmitting}
+          disabled={isLoading}
         >
-          {isSubmitting ? (
+          {isLoading ? (
             <>
               <svg
                 aria-hidden="true"
