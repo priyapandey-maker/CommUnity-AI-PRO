@@ -1,6 +1,12 @@
 import express, { Application } from 'express';
 import cors from 'cors';
-import { healthRouter } from './routes/health';
+import {
+  healthRouter,
+  incidentRouter,
+  analyzeRouter,
+  decisionRouter,
+  ledgerRouter,
+} from './routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app: Application = express();
@@ -18,6 +24,10 @@ app.use(express.json());
 
 // ── Routes ──────────────────────────────────────────────────
 app.use('/health', healthRouter);
+app.use('/incident', incidentRouter);
+app.use('/analyze', analyzeRouter);
+app.use('/decision', decisionRouter);
+app.use('/ledger', ledgerRouter);
 
 // ── Error handler (must be last) ────────────────────────────
 app.use(errorHandler);
