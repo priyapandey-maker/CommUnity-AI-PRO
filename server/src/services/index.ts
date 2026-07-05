@@ -1,3 +1,2 @@
-// Placeholder for future service modules
-// e.g. export * from './incidentService';
-export {};
+// Service modules export API call functions or business logic services.
+export * from './incidentService';
