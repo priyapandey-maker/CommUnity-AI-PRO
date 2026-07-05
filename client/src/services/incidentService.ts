@@ -69,3 +69,26 @@ export async function getDecision(id: string): Promise<DecisionResponse> {
   return data;
 }
 
+export interface LedgerEntry {
+  incidentId: string;
+  timestamp: string;
+  issueType: string;
+  priority: string;
+  recommendation: string;
+  decisionReadiness: string;
+  status: string;
+}
+
+/**
+ * GET /ledger
+ *
+ * Fetches all logged decisions from the backend in chronological order.
+ *
+ * @throws {ApiError} On network failure or non-2xx response.
+ */
+export async function getLedger(): Promise<LedgerEntry[]> {
+  const { data } = await apiClient.get<LedgerEntry[]>('/ledger');
+  return data;
+}
+
+

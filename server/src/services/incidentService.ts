@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { aiService } from './aiService';
 import { KnowledgeService } from '../knowledge/knowledgeService';
 import { decisionEngineService } from './decisionEngineService';
+import { ledgerService } from './ledgerService';
 import type { IncidentResponse } from '@community-ai/shared';
 
 // ── Types ─────────────────────────────────────────────────
@@ -37,6 +38,15 @@ export class IncidentService {
 
       // E2DP Step 3: Deterministic decision engine evaluation
       const decision = decisionEngineService.evaluate(context);
+
+      // E2DP Step 4: Write entry to the public transparency ledger
+      ledgerService.addEntry({
+        incidentId,
+        issueType: analysis.issueType,
+        priority: decision.priority,
+        recommendation: decision.recommendation,
+        decisionReadiness: decision.decisionReadiness,
+      });
 
       return {
         incidentId,
