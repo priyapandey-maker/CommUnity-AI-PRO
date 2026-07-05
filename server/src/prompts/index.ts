@@ -1,3 +1,2 @@
-// Placeholder for AI prompt templates
-// Prompts will be loaded and passed to Vertex AI / Gemini models.
-export {};
+// AI Prompt templates and configurations
+export { INCIDENT_UNDERSTANDING_SYSTEM_PROMPT } from './incidentUnderstanding';
