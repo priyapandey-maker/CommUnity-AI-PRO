@@ -1,6 +1,8 @@
 import type { DecisionResult } from './decisionTypes';
 export * from './decisionTypes';
 
+export type AnalysisSource = 'gemini' | 'fallback';
+
 export interface AnalyzeIncidentResult {
   issueType: string;
   severity: string;
@@ -9,6 +11,7 @@ export interface AnalyzeIncidentResult {
   possibleHazards: string[];
   confidenceReason: string;
   summary: string;
+  source?: AnalysisSource;
 }
 
 export interface IncidentApiResponse {

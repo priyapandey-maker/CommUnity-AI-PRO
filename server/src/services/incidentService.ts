@@ -4,7 +4,8 @@ import { KnowledgeService } from '../knowledge/knowledgeService';
 import { decisionEngineService } from './decisionEngineService';
 import { ledgerService } from './ledgerService';
 import { decisionStoreService } from './decisionStoreService';
-import type { IncidentResponse } from '@community-ai/shared';
+import { fallbackIncidentUnderstandingService } from './fallbackIncidentUnderstandingService';
+import type { IncidentResponse, AnalyzeIncidentResult } from '@community-ai/shared';
 
 // ── Types ─────────────────────────────────────────────────
 export interface IncidentPayload {
@@ -24,12 +25,21 @@ export class IncidentService {
     const incidentId = randomUUID();
 
     try {
-      // E2DP Step 1: Gemini Understanding (AI analysis)
-      const analysis = await aiService.analyzeIncident({
-        description: data.description,
-        location: data.location,
-        image: data.image,
-      });
+      // E2DP Step 1: Gemini Understanding (AI analysis) with Fallback
+      let analysis: AnalyzeIncidentResult;
+      try {
+        analysis = await aiService.analyzeIncident({
+          description: data.description,
+          location: data.location,
+          image: data.image,
+        });
+      } catch (err) {
+        console.error('[IncidentService] AI analysis failed, falling back to rule-based analysis. Error:', err);
+        analysis = fallbackIncidentUnderstandingService.analyzeIncident({
+          description: data.description,
+          location: data.location,
+        });
+      }
 
       // E2DP Step 2: Enrich with knowledge context
       const context = await this.knowledgeService.getContext({

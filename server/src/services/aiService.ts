@@ -26,6 +26,7 @@ export interface AnalyzeIncidentResult {
   possibleHazards: string[];
   confidenceReason: string;
   summary: string;
+  source?: 'gemini' | 'fallback';
 }
 
 interface TextContent {
@@ -158,6 +159,7 @@ Location: ${params.location}`;
 
       // 5. Parse the JSON result
       const parsedResult: AnalyzeIncidentResult = JSON.parse(response.text);
+      parsedResult.source = 'gemini';
       
       aiLogger.info('Incident analysis completed successfully', { 
         issueType: parsedResult.issueType, 
