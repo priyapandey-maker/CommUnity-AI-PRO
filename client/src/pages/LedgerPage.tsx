@@ -7,32 +7,8 @@ import { getLedger, LedgerEntry, parseApiError } from '@/services';
 
 function DecisionsIcon() {
   return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-}
-
-function HighPriorityIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  );
-}
-
-function ActiveIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-    </svg>
-  );
-}
-
-function ReadinessIcon() {
-  return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
     </svg>
   );
 }
@@ -74,6 +50,10 @@ export default function LedgerPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError]     = useState<string | null>(null);
 
+  // Filters State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('ALL');
+
   const fetchLedger = async () => {
     setLoading(true);
     setError(null);
@@ -91,15 +71,16 @@ export default function LedgerPage() {
   useEffect(() => { fetchLedger(); }, []);
 
   const totalDecisions = ledger.length;
-  const criticalCount  = ledger.filter(e => e.priority === 'CRITICAL' || e.priority === 'HIGH').length;
   const activeCount    = ledger.filter(e => e.status === 'received').length;
 
-  const LEDGER_STATS = [
-    { label: 'Total Decisions', value: totalDecisions.toString(), icon: <DecisionsIcon />, color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-50 dark:bg-primary-950' },
-    { label: 'High Priority',   value: criticalCount.toString(),  icon: <HighPriorityIcon />, color: 'text-red-600 dark:text-red-400',     bg: 'bg-red-50 dark:bg-red-950' },
-    { label: 'Active Reports',  value: activeCount.toString(),    icon: <ActiveIcon />,    color: 'text-decision-600 dark:text-decision-400', bg: 'bg-decision-50 dark:bg-decision-950' },
-    { label: 'Avg. Readiness',  value: totalDecisions > 0 ? 'HIGH' : '—', icon: <ReadinessIcon />, color: 'text-evidence-600 dark:text-evidence-400', bg: 'bg-evidence-50 dark:bg-evidence-950' },
-  ];
+  // Filter logic
+  const filteredLedger = ledger.filter(entry => {
+    const matchesSearch = (entry.issueType || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (entry.recommendation || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          entry.incidentId.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPriority = priorityFilter === 'ALL' || entry.priority.toUpperCase() === priorityFilter;
+    return matchesSearch && matchesPriority;
+  });
 
   return (
     <>
@@ -109,20 +90,22 @@ export default function LedgerPage() {
         subtitle="A complete, auditable record of every evidence-based community decision. All entries are immutable and publicly accessible."
       />
 
-      {/* Stats row */}
-      <section aria-label="Ledger statistics" className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {LEDGER_STATS.map(({ label, value, icon, color, bg }) => (
-          <div
-            key={label}
-            className="rounded-lg border border-line bg-surface-1 p-4"
-          >
-            <span className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${bg} ${color}`} aria-hidden="true">
-              {icon}
-            </span>
-            <p className="text-xl font-bold text-primary">{value}</p>
-            <p className="text-xs mt-0.5 font-medium text-muted">{label}</p>
-          </div>
-        ))}
+      {/* Registry Statistics Summary - Compact tags instead of oversized KPI cards */}
+      <section aria-label="Register Summary" className="flex flex-wrap gap-3 mb-6">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-line bg-surface-1 text-xs">
+          <span className="w-5 h-5 rounded flex items-center justify-center bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400" aria-hidden="true">
+            <DecisionsIcon />
+          </span>
+          <span className="font-semibold text-primary">{totalDecisions}</span>
+          <span className="text-muted">Total Filed Decisions</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-line bg-surface-1 text-xs">
+          <span className="w-5 h-5 rounded flex items-center justify-center bg-decision-50 dark:bg-decision-950 text-decision-600 dark:text-decision-400" aria-hidden="true">
+            <DecisionsIcon />
+          </span>
+          <span className="font-semibold text-primary">{activeCount}</span>
+          <span className="text-muted">Active Pipeline Incidents</span>
+        </div>
       </section>
 
       {/* Table / List Container */}
@@ -130,6 +113,35 @@ export default function LedgerPage() {
         aria-label="Ledger entries"
         className="rounded-lg border border-line bg-surface-1 overflow-hidden mb-8"
       >
+        {/* Table Header and Filters Bar */}
+        <div className="p-4 border-b border-line bg-surface-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs font-semibold text-primary uppercase tracking-wider">
+            Public Logs ({filteredLedger.length})
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="Search log by keyword, ID..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="px-3 py-1.5 text-xs rounded-lg bg-surface-1 border border-line text-primary placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-primary-500 w-full sm:w-56"
+            />
+            {/* Priority Filter */}
+            <select
+              value={priorityFilter}
+              onChange={e => setPriorityFilter(e.target.value)}
+              className="px-3 py-1.5 text-xs rounded-lg bg-surface-1 border border-line text-primary focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer w-full sm:w-auto"
+            >
+              <option value="ALL">All Priorities</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+        </div>
+
         {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -146,22 +158,22 @@ export default function LedgerPage() {
             <svg className="w-8 h-8 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <p className="text-sm font-medium text-red-600 dark:text-red-400">Failed to load ledger records</p>
+            <p className="text-sm font-medium text-red-650 dark:text-red-400">Failed to load ledger records</p>
             <p className="text-xs max-w-sm text-muted">{error}</p>
             <Button variant="secondary" onClick={fetchLedger}>Retry</Button>
           </div>
         )}
 
         {/* Data table */}
-        {!loading && !error && ledger.length > 0 && (
+        {!loading && !error && filteredLedger.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse" role="table">
               <thead>
-                <tr className="border-b border-line bg-surface-2">
+                <tr className="border-b border-line bg-surface-2/65">
                   {['Incident', 'Priority', 'Recommendation', 'Readiness', 'Recorded', 'Status'].map(h => (
                     <th
                       key={h}
-                      className="px-5 py-3.5 text-xs font-semibold uppercase tracking-widest text-muted"
+                      className="px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-muted"
                     >
                       {h}
                     </th>
@@ -169,13 +181,13 @@ export default function LedgerPage() {
                 </tr>
               </thead>
               <tbody>
-                {ledger.map((entry) => (
+                {filteredLedger.map((entry) => (
                   <tr
                     key={entry.incidentId}
                     onClick={() => navigate(`/decision/${entry.incidentId}`)}
-                    className="border-b border-line/60 hover:bg-surface-2 cursor-pointer transition-colors duration-100 last:border-b-0"
+                    className="border-b border-line/50 hover:bg-surface-2/70 cursor-pointer transition-colors duration-100 last:border-b-0"
                   >
-                    <td className="px-5 py-4">
+                    <td className="px-6 py-4.5">
                       <div className="text-sm font-semibold text-primary">
                         {entry.issueType || 'Unknown Issue'}
                       </div>
@@ -183,23 +195,23 @@ export default function LedgerPage() {
                         #{entry.incidentId.substring(0, 8)}
                       </div>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-6 py-4.5">
                       <Badge variant={getPriorityBadgeVariant(entry.priority)}>
                         {entry.priority}
                       </Badge>
                     </td>
-                    <td className="px-5 py-4 text-sm max-w-xs text-secondary">
+                    <td className="px-6 py-4.5 text-sm max-w-xs text-secondary leading-relaxed">
                       {entry.recommendation}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-6 py-4.5">
                       <Badge variant={getReadinessBadgeVariant(entry.decisionReadiness)}>
                         {entry.decisionReadiness}
                       </Badge>
                     </td>
-                    <td className="px-5 py-4 text-sm whitespace-nowrap text-muted">
+                    <td className="px-6 py-4.5 text-sm whitespace-nowrap text-muted">
                       {formatTimestamp(entry.timestamp)}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-6 py-4.5">
                       <Badge variant="info" dot>
                         {entry.status}
                       </Badge>
@@ -212,16 +224,16 @@ export default function LedgerPage() {
         )}
 
         {/* Empty state */}
-        {!loading && !error && ledger.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+        {!loading && !error && filteredLedger.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center gap-3 bg-surface-1">
             <svg className="w-10 h-10 text-slate-300 dark:text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.25} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
             <p className="text-sm font-medium text-secondary">
-              No decisions recorded yet.
+              No matching records found.
             </p>
             <p className="text-xs max-w-xs text-muted">
-              Entries will appear here once community incidents are submitted and analysed.
+              Adjust your search keywords or priority filter queries.
             </p>
           </div>
         )}
