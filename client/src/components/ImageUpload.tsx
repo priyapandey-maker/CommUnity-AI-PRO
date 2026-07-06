@@ -88,7 +88,7 @@ export default function ImageUpload({ onFileChange, hasError = false }: ImageUpl
         {...getRootProps()}
         id="image-upload-dropzone"
         className={[
-          'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-6 py-10 cursor-pointer transition-all duration-150 text-center',
+          'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-4 py-6 cursor-pointer transition-all duration-150 text-center focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500',
           isDragActive
             ? 'border-primary-500 bg-primary-500/10 scale-[1.01]'
             : hasError || dropError
@@ -102,7 +102,7 @@ export default function ImageUpload({ onFileChange, hasError = false }: ImageUpl
         {/* Upload icon */}
         <div
           className={[
-            'w-12 h-12 rounded-lg flex items-center justify-center transition-colors',
+            'w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
             isDragActive ? 'bg-primary-500/20' : 'bg-[var(--surface-2)] border border-line',
           ].join(' ')}
         >

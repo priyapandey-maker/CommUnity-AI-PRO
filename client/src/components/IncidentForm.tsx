@@ -56,10 +56,31 @@ export default function IncidentForm() {
       id="incident-form"
       noValidate
       onSubmit={handleSubmit(onSubmit)}
-      className="rounded-xl border p-6 sm:p-8 space-y-6"
+      className="rounded-xl border p-5 sm:p-6 space-y-5"
       style={{ backgroundColor: 'var(--surface-1)', borderColor: 'var(--line)' }}
     >
-      {/* ── Description ──────────────────────────────── */}
+      {/* ── Location (1st in Hierarchy) ──────────────── */}
+      <Controller
+        name="location"
+        control={control}
+        rules={RULES.location}
+        defaultValue=""
+        render={({ field }) => (
+          <Input
+            {...field}
+            id="incident-location"
+            label="Location *"
+            type="text"
+            placeholder="e.g. Oak Ave & 5th St, Downtown"
+            error={errors.location?.message}
+            hint="Street address, neighborhood area, or local landmark."
+            fullWidth
+            onChange={(e) => { clearError(); field.onChange(e); }}
+          />
+        )}
+      />
+
+      {/* ── Description (2nd in Hierarchy) ───────────── */}
       <div className="relative">
         <Controller
           name="description"
@@ -72,9 +93,9 @@ export default function IncidentForm() {
               id="incident-description"
               label="Incident Description *"
               placeholder="e.g. A streetlight at the corner of Oak Ave and 5th St has been out for two weeks, creating a safety hazard at night…"
-              rows={5}
+              rows={4}
               error={errors.description?.message}
-              hint="Describe what happened — include as much detail as possible."
+              hint="Provide full operational details regarding the issue."
               fullWidth
               onChange={(e) => { clearError(); field.onChange(e); }}
             />
@@ -90,32 +111,11 @@ export default function IncidentForm() {
         </span>
       </div>
 
-      {/* ── Location ─────────────────────────────────── */}
-      <Controller
-        name="location"
-        control={control}
-        rules={RULES.location}
-        defaultValue=""
-        render={({ field }) => (
-          <Input
-            {...field}
-            id="incident-location"
-            label="Location *"
-            type="text"
-            placeholder="e.g. Oak Ave & 5th St, Downtown"
-            error={errors.location?.message}
-            hint="Street address, neighbourhood, or landmark."
-            fullWidth
-            onChange={(e) => { clearError(); field.onChange(e); }}
-          />
-        )}
-      />
-
-      {/* ── Image Upload ─────────────────────────────── */}
+      {/* ── Image Upload (3rd in Hierarchy) ──────────── */}
       <FormField
         id="incident-image"
         label="Supporting Image"
-        hint="Optional — attach a photo of the incident (JPG, PNG, WebP · max 5 MB)."
+        hint="Optional — attach a clear photo of the incident (JPG, PNG, WebP, GIF · max 5 MB)."
       >
         <ImageUpload onFileChange={setImageFile} />
       </FormField>
@@ -158,7 +158,7 @@ export default function IncidentForm() {
 
       {/* ── Actions ──────────────────────────────────── */}
       <div
-        className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-5 border-t"
+        className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t"
         style={{ borderColor: 'var(--line)' }}
       >
         <Button

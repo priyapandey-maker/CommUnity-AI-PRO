@@ -19,11 +19,11 @@ export default function SubmitIncidentPage() {
     <>
       <PageHeader
         badge="Incident Reporting"
-        title="Submit a Community Incident"
-        subtitle="Report a concern in your area. Your submission is analysed and results in a transparent, auditable decision published on the public ledger."
+        title="Report a Community Issue"
+        subtitle="Submissions are audited using localized evidence to generate transparent public decisions."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Form ─────────────────────────────────── */}
         <div className="lg:col-span-2">
           <IncidentForm />
@@ -33,20 +33,20 @@ export default function SubmitIncidentPage() {
         <aside className="flex flex-col gap-4">
 
           {/* What happens next */}
-          <div className="rounded-lg border border-line bg-surface-1 p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4 text-muted">
+          <div className="rounded-lg border border-line bg-surface-1 p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-3 text-muted">
               What happens next
             </h2>
-            <ol className="flex flex-col gap-4" role="list">
+            <ol className="flex flex-col gap-3" role="list">
               {STEPS.map(({ step, text }) => (
-                <li key={step} className="flex gap-3">
+                <li key={step} className="flex gap-2.5">
                   <span
-                    className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5"
+                    className="w-5.5 h-5.5 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5"
                     aria-hidden="true"
                   >
                     {step}
                   </span>
-                  <p className="text-sm leading-relaxed text-secondary">
+                  <p className="text-xs leading-relaxed text-secondary">
                     {text}
                   </p>
                 </li>
@@ -55,17 +55,17 @@ export default function SubmitIncidentPage() {
           </div>
 
           {/* Tips */}
-          <div className="rounded-lg border border-line bg-surface-2 p-5">
+          <div className="rounded-lg border border-line bg-surface-2 p-4">
             <h2
-              className="text-xs font-semibold uppercase tracking-widest mb-3 text-primary-700 dark:text-primary-400"
+              className="text-xs font-semibold uppercase tracking-widest mb-2.5 text-primary-700 dark:text-primary-400"
             >
               Tips for a better report
             </h2>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col gap-2 text-xs">
               {TIPS.map((tip) => (
-                <li key={tip} className="flex gap-2 text-sm text-secondary">
+                <li key={tip} className="flex gap-2 text-secondary">
                   <svg
-                    className="w-4 h-4 text-decision-600 dark:text-decision-400 shrink-0 mt-0.5"
+                    className="w-3.5 h-3.5 text-decision-600 dark:text-decision-400 shrink-0 mt-0.5"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                     aria-hidden="true"
