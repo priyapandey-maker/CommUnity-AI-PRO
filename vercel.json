@@ -1,18 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "npm run build --workspace=server && npm run build --workspace=client",
-  "outputDirectory": "client/dist",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "installCommand": "npm install",
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 60
-    }
-  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
