@@ -1,0 +1,26 @@
+# Dependencies (installed fresh by Vercel)
+node_modules
+client/node_modules
+server/node_modules
+shared/node_modules
+
+# Local build artifacts (Vercel builds these itself)
+client/dist
+server/dist
+
+# Git history
+.git
+
+# Local environment files
+.env
+.env.local
+.env.development
+
+# Docker (not used by Vercel)
+Dockerfile
+
+# Render config (alternative deployment)
+render.yaml
+
+# Docs / extras
+docs
