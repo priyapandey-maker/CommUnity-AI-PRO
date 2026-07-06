@@ -117,6 +117,50 @@ function getReadinessPercentage(readiness: string): number {
   return 35;
 }
 
+const getEvidenceInfluence = (factor: string, value: string): { text: string; trend: 'up' | 'down' | 'neutral' } => {
+  const v = value.toLowerCase();
+  switch (factor) {
+    case 'schoolZone':
+      return v === 'true' 
+        ? { text: '↑ Increased Priority (School Zone active)', trend: 'up' }
+        : { text: '→ Standard Priority (Non-School Zone)', trend: 'neutral' };
+    case 'recentRain':
+      return v === 'true'
+        ? { text: '↑ Priority Escalated (Active rain/precipitation hazard)', trend: 'up' }
+        : { text: '→ Standard Priority (Dry weather conditions)', trend: 'neutral' };
+    case 'maintenanceHistory':
+      const count = parseInt(v) || 0;
+      return count > 0
+        ? { text: `↑ Increased Risk (+${count} recent maintenance failures)`, trend: 'up' }
+        : { text: '→ Normal Risk Profile (Clean maintenance history)', trend: 'neutral' };
+    case 'criticalInfrastructure':
+      return v === 'true'
+        ? { text: '↑ Critical Path Escalation (Key assets affected)', trend: 'up' }
+        : { text: '→ Standard Routing (General asset classification)', trend: 'neutral' };
+    case 'severity':
+      if (v === 'high' || v === 'critical') {
+        return { text: `↑ High Priority Driver (Severity rated ${value})`, trend: 'up' };
+      }
+      return { text: `→ Base Driver (Severity rated ${value})`, trend: 'neutral' };
+    case 'urgency':
+      if (v === 'high' || v === 'immediate' || v === 'critical') {
+        return { text: `↑ Urgency Triage Trigger (${value} attention required)`, trend: 'up' };
+      }
+      return { text: `→ Base Driver (Urgency rated ${value})`, trend: 'neutral' };
+    case 'hazardCount':
+      const hCount = parseInt(v) || 0;
+      return hCount > 0
+        ? { text: `↑ Priority Safety Impact (${hCount} hazard(s) flagged)`, trend: 'up' }
+        : { text: '→ Base Priority (No critical safety hazards flagged)', trend: 'neutral' };
+    case 'crewAvailable':
+      return v === 'true'
+        ? { text: '↑ Immediate Response Viable (Crew dispatch ready)', trend: 'up' }
+        : { text: '↓ Dispatch Latency Risk (No crew currently available)', trend: 'down' };
+    default:
+      return { text: '→ Telemetry Factor Ingested', trend: 'neutral' };
+  }
+};
+
 export default function DecisionPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -377,11 +421,130 @@ export default function DecisionPage() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* Left Column: Primary Recommendation & Evidence Timeline */}
-            <div className="lg:col-span-8 flex flex-col gap-6">
-              
-              {/* Primary Recommendation Card */}
+              <div className="lg:col-span-8 flex flex-col gap-6">
+              {/* Evidence pipeline inputs */}
+              <Card variant="default" padding="lg">
+                <h3 className="text-lg font-bold text-slate-200 font-display mb-6 flex items-center gap-2">
+                  <CheckShieldIcon />
+                  Evidence Pipeline Ingestion & Influence Signals
+                </h3>
+
+                <div className="relative border-l border-line pl-6 ml-3 flex flex-col gap-8">
+                  {decisionRecord.decision.evidence.map((item: EvidenceFactor, index: number) => {
+                    const factorMeta = getFactorMeta(item.factor);
+                    const influence = getEvidenceInfluence(item.factor, item.value);
+                    
+                    const trendColors = {
+                      up: 'text-emerald-400 bg-emerald-950/20 border-emerald-500/20',
+                      down: 'text-rose-400 bg-rose-950/20 border-rose-500/20',
+                      neutral: 'text-slate-400 bg-slate-900 border-line',
+                    };
+
+                    return (
+                      <div key={index} className="relative group animate-fade-in">
+                        {/* Timeline Node Point */}
+                        <span className="absolute -left-[38px] top-0.5 bg-surface-2 border border-line-strong w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-300 group-hover:border-brand-500 group-hover:shadow-glow-xs">
+                          {factorMeta.icon}
+                        </span>
+                        
+                        <div className="flex flex-col gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="text-sm font-semibold text-slate-200 group-hover:text-brand-300 transition-colors duration-200">
+                              {factorMeta.title}
+                            </h4>
+                            
+                            <Badge variant={item.source === 'analysis' ? 'primary' : 'default'}>
+                              {item.source === 'analysis' ? 'AI Ingestion' : 'Knowledge Context'}
+                            </Badge>
+                            
+                            {item.weight !== undefined && (
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-surface-3 border border-line text-slate-400">
+                                Weight: {item.weight}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+                            <p className="text-xs text-slate-400 leading-relaxed">
+                              Resolved value: <span className="text-slate-300 font-medium font-mono bg-surface-3 px-1.5 py-0.5 rounded border border-line">{item.value}</span>
+                            </p>
+                            
+                            <div className={`text-xs px-2.5 py-1 rounded-lg border font-medium flex items-center gap-1 ${trendColors[influence.trend]}`}>
+                              {influence.text}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+
+              {/* Connector Arrow */}
+              <div className="flex justify-center py-2 pointer-events-none">
+                <svg className="w-6 h-6 text-slate-700 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7m14-6l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* Decision Influence Mapping */}
+              <Card variant="glass" padding="md" className="border-slate-800 bg-slate-950/30">
+                <div className="px-2 py-1">
+                  <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4">
+                    Decision Influence Engine Mapping
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch relative">
+                    <div className="bg-surface-1 p-4 rounded-xl border border-line flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Ingested Telemetry Inputs</span>
+                        <h4 className="text-sm font-bold text-slate-200 mt-1">Weighted Evidence Signals</h4>
+                      </div>
+                      <div className="mt-4 flex flex-col gap-1 text-slate-400 text-xs">
+                        <span>• {decisionRecord.decision.evidence.filter(e => e.source === 'analysis').length} Report inputs ingested</span>
+                        <span>• {decisionRecord.decision.evidence.filter(e => e.source === 'context').length} Knowledge contexts enriched</span>
+                      </div>
+                    </div>
+                    
+                    <div className="hidden md:flex items-center justify-center pointer-events-none">
+                      <svg className="w-8 h-8 text-brand-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </div>
+                    <div className="flex md:hidden items-center justify-center py-1">
+                      <svg className="w-6 h-6 text-brand-500 rotate-90 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </div>
+
+                    <div className="bg-brand-950/10 p-4 rounded-xl border border-brand-800/40 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] text-brand-400 font-bold uppercase tracking-wider">Resolution Mapping</span>
+                        <h4 className="text-sm font-bold text-slate-200 mt-1">Rule Triage Output</h4>
+                      </div>
+                      <div className="mt-4 flex flex-col gap-1.5 text-slate-300 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span>Computed Priority:</span>
+                          <span className="font-bold text-slate-100">{decisionRecord.decision.priority}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>Confidence Readiness:</span>
+                          <span className="font-bold text-slate-100">{decisionRecord.decision.decisionReadiness}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Connector Arrow */}
+              <div className="flex justify-center py-2 pointer-events-none">
+                <svg className="w-6 h-6 text-slate-700 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7m14-6l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* Final Decision Card */}
               <Card variant="glass" padding="lg" className="relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent-500/5 rounded-full blur-2xl pointer-events-none" />
@@ -475,42 +638,6 @@ export default function DecisionPage() {
                       {decisionRecord.decision.explanation}
                     </p>
                   </div>
-                </div>
-              </Card>
-
-              {/* Timeline Card */}
-              <Card variant="default" padding="lg">
-                <h3 className="text-lg font-bold text-slate-200 font-display mb-6 flex items-center gap-2">
-                  <CheckShieldIcon />
-                  Evidence Pipeline Execution Signals
-                </h3>
-
-                <div className="relative border-l border-line pl-6 ml-3 flex flex-col gap-8">
-                  {decisionRecord.decision.evidence.map((item: EvidenceFactor, index: number) => {
-                    const factorMeta = getFactorMeta(item.factor);
-
-                    return (
-                      <div key={index} className="relative group">
-                        {/* Timeline Node Point */}
-                        <span className="absolute -left-[38px] top-0.5 bg-surface-2 border border-line-strong w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-300 group-hover:border-brand-500 group-hover:shadow-glow-xs">
-                          {factorMeta.icon}
-                        </span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-semibold text-slate-200 group-hover:text-brand-300 transition-colors duration-200">
-                              {factorMeta.title}
-                            </h4>
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-surface-3 border border-line text-slate-400">
-                              Weight: {item.weight}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                            Resolved value: <span className="text-slate-300 font-medium font-mono">{item.value}</span>
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </Card>
             </div>
