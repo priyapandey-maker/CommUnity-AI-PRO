@@ -6,6 +6,8 @@ import { decisionEngineService } from './decisionEngineService';
 import { duplicateDetectionAgent } from './duplicateDetectionAgent';
 import { locationIntelligenceAgent } from './locationIntelligenceAgent';
 import { priorityPredictionAgent } from './priorityPredictionAgent';
+import { recommendationAgent } from './recommendationAgent';
+import { explanationAgent } from './explanationAgent';
 import { ledgerService } from './ledgerService';
 import { decisionStoreService } from './decisionStoreService';
 import { fallbackIncidentUnderstandingService } from './fallbackIncidentUnderstandingService';
@@ -38,20 +40,6 @@ class IncidentUnderstandingAgent {
 }
 
 
-class RecommendationAgent {
-  public async recommend(_analysis: AnalyzeIncidentResult): Promise<unknown> {
-    // Placeholder: Currently mapped to decisionEngineService for identical behavior
-    return null;
-  }
-}
-
-class ExplanationAgent {
-  public async explain(_analysis: AnalyzeIncidentResult): Promise<unknown> {
-    // Placeholder: Currently mapped to decisionEngineService for identical behavior
-    return null;
-  }
-}
-
 // ── AI Orchestrator ─────────────────────────────────────────
 
 export class AIOrchestrator {
@@ -59,8 +47,8 @@ export class AIOrchestrator {
   private duplicateAgent = duplicateDetectionAgent;
   private locationAgent = locationIntelligenceAgent;
   private priorityAgent = priorityPredictionAgent;
-  private recommendationAgent = new RecommendationAgent();
-  private explanationAgent = new ExplanationAgent();
+  private recommendationAgent = recommendationAgent;
+  private explanationAgent = explanationAgent;
   private knowledgeService = new KnowledgeService();
 
   /**
@@ -93,13 +81,13 @@ export class AIOrchestrator {
       const locationResult = await this.locationAgent.analyze(payload.location);
       
       // Agent 4: Priority Prediction
-      await this.priorityAgent.predict(analysis, locationResult, duplicateResult);
+      const priorityResult = await this.priorityAgent.predict(analysis, locationResult, duplicateResult);
       
       // Agent 5: Recommendation
-      await this.recommendationAgent.recommend(analysis);
+      const recommendationResult = await this.recommendationAgent.recommend(analysis, priorityResult);
       
       // Agent 6: Explanation
-      await this.explanationAgent.explain(analysis);
+      const explanationResult = await this.explanationAgent.explain(analysis, priorityResult, recommendationResult);
 
       // Context Enrichment (Knowledge Graph interaction)
       const context = await this.knowledgeService.getContext({
@@ -109,6 +97,15 @@ export class AIOrchestrator {
 
       // Aggregate and resolve final decision
       const decision = decisionEngineService.evaluate(context);
+      
+      // Override deterministic fallback with Agent outputs
+      decision.priority = priorityResult.priority;
+      decision.recommendation = recommendationResult.actions.join(' ');
+      // You can add more mapping here for explanation, alternatives, etc. if needed
+      decision.explanation = explanationResult.reasoning;
+      
+      // For type compliance and preserving the actual objects for future iterations, 
+      // we attach them to the response or just let the overrides handle it.
 
       // Finalization and Storage
       ledgerService.addEntry({

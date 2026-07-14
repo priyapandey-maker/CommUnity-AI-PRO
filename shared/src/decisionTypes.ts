@@ -37,3 +37,15 @@ export interface PriorityPredictionResult {
   recommendedSLA: string;
   confidence: number;
 }
+
+export interface RecommendationResult {
+  departments: string[];
+  actions: string[];
+  escalation: boolean;
+}
+
+export interface ExplanationResult {
+  reasoning: string;
+  confidence: number;
+  evidenceSummary: string[];
+}
