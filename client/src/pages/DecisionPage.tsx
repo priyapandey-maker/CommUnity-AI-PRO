@@ -356,6 +356,7 @@ export default function DecisionPage() {
               </div>
             )}
 
+            {/* 1. Recommendation, 2. Priority, 3. Readiness */}
             <Card variant="default" padding="lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
@@ -427,70 +428,128 @@ export default function DecisionPage() {
               </div>
             </Card>
 
+            {/* 4. Decision Explanation */}
             <Card variant="default" padding="lg">
-              <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4 flex items-center gap-2">
-                <CheckShieldIcon />
-                <span>Evidence Pipeline Ingestion & Influence Signals</span>
+              <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
+                Executive Reasoning & Public Explanation
               </h3>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                    Citizen Incident Summary
+                  </h4>
+                  <p className="text-sm text-secondary leading-relaxed bg-surface-2 p-4 rounded-lg border border-line">
+                    {decisionRecord.analysis.summary || 'No summary text available.'}
+                  </p>
+                </div>
 
-              <div className="relative border-l border-line pl-6 ml-3 flex flex-col gap-8">
-                {decisionRecord.decision.evidence.map((item: EvidenceFactor, index: number) => {
-                  const factorMeta = getFactorMeta(item.factor);
-                  const influence = getEvidenceInfluence(item.factor, item.value);
-
-                  const trendColors = {
-                    up: 'text-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/20',
-                    down: 'text-rose-500 bg-rose-50/50 dark:bg-rose-950/20 border-rose-500/20',
-                    neutral: 'text-muted bg-surface-2 border-line',
-                  };
-
-                  return (
-                    <div key={index} className="relative group animate-fade-in">
-                      <span className="absolute -left-[38px] top-0.5 bg-surface-2 border border-line-strong w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-all duration-150 group-hover:border-primary-500">
-                        {factorMeta.icon}
-                      </span>
-
-                      <div className="flex flex-col gap-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h4 className="text-sm font-semibold text-primary group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-150">
-                            {factorMeta.title}
-                          </h4>
-
-                          <Badge variant={item.source === 'analysis' ? 'primary' : 'info'}>
-                            {item.source === 'analysis' ? 'AI Analysis' : 'Knowledge Context'}
-                          </Badge>
-
-                          {item.weight !== undefined && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-surface-3 border border-line text-muted">
-                              Weight: {item.weight}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
-                          <p className="text-xs text-muted leading-relaxed">
-                            Resolved value: <span className="text-secondary font-medium font-mono bg-surface-3 px-1.5 py-0.5 rounded-lg border border-line">{item.value}</span>
-                          </p>
-
-                          <div className={`text-xs px-2.5 py-1 rounded-lg border font-medium flex items-center gap-1 ${trendColors[influence.trend]}`}>
-                            {influence.text}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
+                    Decision Pipeline Explanation
+                  </h4>
+                  <p className="text-sm text-secondary leading-relaxed bg-surface-3 p-4 rounded-lg border border-line-strong">
+                    {decisionRecord.decision.explanation}
+                  </p>
+                </div>
               </div>
             </Card>
 
+            {/* 5. Evidence (Evidence Pipeline + Safety Hazards) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <Card variant="default" padding="lg" className="h-full">
+                  <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4 flex items-center gap-2">
+                    <CheckShieldIcon />
+                    <span>Evidence Pipeline Ingestion & Influence Signals</span>
+                  </h3>
+
+                  <div className="relative border-l border-line pl-6 ml-3 flex flex-col gap-8">
+                    {decisionRecord.decision.evidence.map((item: EvidenceFactor, index: number) => {
+                      const factorMeta = getFactorMeta(item.factor);
+                      const influence = getEvidenceInfluence(item.factor, item.value);
+
+                      const trendColors = {
+                        up: 'text-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/20',
+                        down: 'text-rose-500 bg-rose-50/50 dark:bg-rose-950/20 border-rose-500/20',
+                        neutral: 'text-muted bg-surface-2 border-line',
+                      };
+
+                      return (
+                        <div key={index} className="relative group animate-fade-in">
+                          <span className="absolute -left-[38px] top-0.5 bg-surface-2 border border-line-strong w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-all duration-150 group-hover:border-primary-500">
+                            {factorMeta.icon}
+                          </span>
+
+                          <div className="flex flex-col gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-sm font-semibold text-primary group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-150">
+                                {factorMeta.title}
+                              </h4>
+
+                              <Badge variant={item.source === 'analysis' ? 'primary' : 'info'}>
+                                {item.source === 'analysis' ? 'AI Analysis' : 'Knowledge Context'}
+                              </Badge>
+
+                              {item.weight !== undefined && (
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-surface-3 border border-line text-muted">
+                                  Weight: {item.weight}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
+                              <p className="text-xs text-muted leading-relaxed">
+                                Resolved value: <span className="text-secondary font-medium font-mono bg-surface-3 px-1.5 py-0.5 rounded-lg border border-line">{item.value}</span>
+                              </p>
+
+                              <div className={`text-xs px-2.5 py-1 rounded-lg border font-medium flex items-center gap-1 ${trendColors[influence.trend]}`}>
+                                {influence.text}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-1">
+                <Card variant="default" padding="lg" className="h-full flex flex-col justify-start">
+                  <div>
+                    <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
+                      Identified Safety Hazards
+                    </h3>
+                    {decisionRecord.analysis.possibleHazards && decisionRecord.analysis.possibleHazards.length > 0 ? (
+                      <div className="flex flex-col gap-2.5">
+                        {decisionRecord.analysis.possibleHazards.map((hazard, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2.5 p-3 rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 text-xs font-semibold text-amber-800 dark:text-amber-200 transition-colors"
+                          >
+                            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" aria-hidden="true" />
+                            <span>{hazard}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted">No immediate hazards identified by the engine.</p>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            </div>
+
+            {/* 6. AI Pipeline & 7. Timeline */}
             <div className="grid grid-cols-1 gap-6">
+              {/* Timeline / Decision Intelligence Pipeline */}
               <Card variant="glass" padding="lg">
                 <div>
                   <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4 flex items-center gap-2">
                     <svg className="w-4 h-4 text-primary-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                     </svg>
-                    <span>Decision Intelligence Pipeline</span>
+                    <span>Timeline: Decision Intelligence Pipeline</span>
                   </h3>
 
                   <div className="hidden md:grid grid-cols-6 relative gap-4">
@@ -544,10 +603,11 @@ export default function DecisionPage() {
                 </div>
               </Card>
 
+              {/* Recommendation Flow / Influence Engine */}
               <Card variant="glass" padding="lg">
                 <div>
                   <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
-                    Decision Influence Engine Mapping
+                    Recommendation Flow: Influence Engine Mapping
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch relative">
@@ -592,125 +652,74 @@ export default function DecisionPage() {
                   </div>
                 </div>
               </Card>
+
+              {/* Alternative Actions */}
+              <Card variant="default" padding="lg">
+                <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
+                  Alternative Actions Considered
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {decisionRecord.decision.alternatives.map((alt, index) => (
+                    <div
+                      key={index}
+                      className="p-3.5 bg-surface-3 rounded-lg border border-line text-xs text-secondary leading-relaxed"
+                    >
+                      {alt}
+                    </div>
+                  ))}
+                </div>
+              </Card>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
-                <Card variant="default" padding="lg" className="flex flex-col gap-5 h-full">
-                  <h3 className="text-md font-bold text-secondary font-display border-b border-line pb-2 mb-1">
-                    Telemetry Metrics
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
-                        Issue Type
-                      </span>
-                      <p className="text-sm font-semibold text-primary bg-surface-3 px-3 py-2 rounded-lg border border-line">
-                        {decisionRecord.analysis.issueType || 'Unknown'}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
-                        Affected Asset
-                      </span>
-                      <p className="text-sm font-semibold text-primary bg-surface-3 px-3 py-2 rounded-lg border border-line">
-                        {decisionRecord.analysis.affectedAsset || 'None Identified'}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
-                        Severity Level
-                      </span>
-                      <div className="bg-surface-3 px-3 py-2 rounded-lg border border-line">
-                        <span className="text-sm font-semibold text-primary">
-                          {decisionRecord.analysis.severity || 'Unknown'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
-                        Urgency Threshold
-                      </span>
-                      <div className="bg-surface-3 px-3 py-2 rounded-lg border border-line">
-                        <span className="text-sm font-semibold text-primary">
-                          {decisionRecord.analysis.urgency || 'Unknown'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-
-              <div className="md:col-span-1">
-                <Card variant="default" padding="lg" className="h-full flex flex-col justify-start">
-                  <div>
-                    <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
-                      Identified Safety Hazards
-                    </h3>
-                    {decisionRecord.analysis.possibleHazards && decisionRecord.analysis.possibleHazards.length > 0 ? (
-                      <div className="flex flex-col gap-2.5">
-                        {decisionRecord.analysis.possibleHazards.map((hazard, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-2.5 p-3 rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 text-xs font-semibold text-amber-800 dark:text-amber-200 transition-colors"
-                          >
-                            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" aria-hidden="true" />
-                            <span>{hazard}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted">No immediate hazards identified by the engine.</p>
-                    )}
-                  </div>
-                </Card>
-              </div>
-            </div>
-
-            <Card variant="default" padding="lg">
-              <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
-                Alternatives Considered
+            {/* 8. Technical Metadata (Telemetry Metrics) */}
+            <Card variant="default" padding="lg" className="flex flex-col gap-5 h-full">
+              <h3 className="text-md font-bold text-secondary font-display border-b border-line pb-2 mb-1">
+                Technical Metadata: Telemetry Metrics
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {decisionRecord.decision.alternatives.map((alt, index) => (
-                  <div
-                    key={index}
-                    className="p-3.5 bg-surface-3 rounded-lg border border-line text-xs text-secondary leading-relaxed"
-                  >
-                    {alt}
-                  </div>
-                ))}
-              </div>
-            </Card>
 
-            <Card variant="default" padding="lg">
-              <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
-                Executive Reasoning & Public Explanation
-              </h3>
-              <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                    Citizen Incident Summary
-                  </h4>
-                  <p className="text-sm text-secondary leading-relaxed bg-surface-2 p-4 rounded-lg border border-line">
-                    {decisionRecord.analysis.summary || 'No summary text available.'}
+                  <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
+                    Issue Type
+                  </span>
+                  <p className="text-sm font-semibold text-primary bg-surface-3 px-3 py-2 rounded-lg border border-line">
+                    {decisionRecord.analysis.issueType || 'Unknown'}
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                    Decision Pipeline Explanation
-                  </h4>
-                  <p className="text-sm text-secondary leading-relaxed bg-surface-3 p-4 rounded-lg border border-line-strong">
-                    {decisionRecord.decision.explanation}
+                  <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
+                    Affected Asset
+                  </span>
+                  <p className="text-sm font-semibold text-primary bg-surface-3 px-3 py-2 rounded-lg border border-line">
+                    {decisionRecord.analysis.affectedAsset || 'None Identified'}
                   </p>
+                </div>
+
+                <div>
+                  <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
+                    Severity Level
+                  </span>
+                  <div className="bg-surface-3 px-3 py-2 rounded-lg border border-line">
+                    <span className="text-sm font-semibold text-primary">
+                      {decisionRecord.analysis.severity || 'Unknown'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
+                    Urgency Threshold
+                  </span>
+                  <div className="bg-surface-3 px-3 py-2 rounded-lg border border-line">
+                    <span className="text-sm font-semibold text-primary">
+                      {decisionRecord.analysis.urgency || 'Unknown'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </Card>
+
           </div>
         )}
       </div>
