@@ -18,6 +18,7 @@ import {
   NoTimeline,
   NoRecommendations
 } from '@/components/dashboard';
+import { TrendChart, CategoryPieChart, DepartmentBarChart, CommunityHeatmap } from '@/components/dashboard/charts';
 
 export default function AuthorityDashboard() {
   const [data, setData] = useState<DashboardState | null>(null);
@@ -127,7 +128,9 @@ export default function AuthorityDashboard() {
         </section>
         <section>
           <h2 className="section-label mb-4">Risk Map</h2>
-          <CommunityRiskMap />
+          <div className="civic-card p-4 h-80">
+            <CommunityHeatmap />
+          </div>
         </section>
       </div>
 
@@ -144,34 +147,13 @@ export default function AuthorityDashboard() {
           {data.trends.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InsightCard title="Incident Trends (7 Days)">
-                {/* Mocking a simple chart with Flex bars */}
-                <div className="flex items-end h-32 gap-2 mt-4">
-                  {data.trends.map(t => (
-                    <div key={t.date} className="flex-1 flex flex-col items-center gap-2 group">
-                      <div className="w-full bg-blue-100 dark:bg-blue-900/30 rounded-t-sm relative">
-                        <div 
-                          className="absolute bottom-0 w-full bg-blue-500 dark:bg-blue-400 rounded-t-sm transition-all group-hover:bg-blue-600"
-                          style={{ height: `${(t.count / 50) * 100}%`, minHeight: '4px' }}
-                        ></div>
-                      </div>
-                      <span className="text-[10px] text-text-tertiary">{t.date}</span>
-                    </div>
-                  ))}
+                <div className="mt-4 h-48">
+                  <TrendChart data={data.trends} />
                 </div>
               </InsightCard>
               <InsightCard title="Category Distribution">
-                <div className="space-y-3 mt-2">
-                  {data.categoryDistribution.map(c => (
-                    <div key={c.category}>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-text-secondary">{c.category}</span>
-                        <span className="text-text-tertiary font-medium">{c.percentage}%</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-surface-3 rounded-full">
-                        <div className="h-1.5 bg-indigo-500 rounded-full" style={{ width: `${c.percentage}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="mt-2 h-48">
+                  <CategoryPieChart data={data.categoryDistribution} />
                 </div>
               </InsightCard>
             </div>
@@ -191,10 +173,15 @@ export default function AuthorityDashboard() {
       {/* 10. Department Overview */}
       <section>
         <h2 className="section-label mb-4">Department Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {data.departments.map(dept => (
-            <DepartmentCard key={dept.id} department={dept} />
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="civic-card p-4 lg:col-span-2 h-64">
+            <DepartmentBarChart data={data.departments} />
+          </div>
+          <div className="flex flex-col gap-4 overflow-y-auto max-h-64 pr-2">
+            {data.departments.map(dept => (
+              <DepartmentCard key={dept.id} department={dept} />
+            ))}
+          </div>
         </div>
       </section>
     </div>
