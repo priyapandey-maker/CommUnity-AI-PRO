@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppLayout } from '@/layouts';
-import { LandingPage, SubmitIncidentPage, DecisionPage, LedgerPage } from '@/pages';
+import { LandingPage, SubmitIncidentPage, DecisionPage, LedgerPage, AuthorityDashboard } from '@/pages';
+
 
 function App() {
   return (
@@ -14,6 +15,8 @@ function App() {
           <Route path="/submit" element={<SubmitIncidentPage />} />
           <Route path="/decision/:id" element={<DecisionPage />} />
           <Route path="/ledger" element={<LedgerPage />} />
+          <Route path="/authority" element={<AuthorityDashboard />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

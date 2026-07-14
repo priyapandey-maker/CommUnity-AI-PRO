@@ -42,7 +42,9 @@ function MoonIcon() {
 const NAV_LINKS = [
   { to: '/submit', label: 'Report Incident' },
   { to: '/ledger', label: 'Decision Ledger' },
+  { to: '/authority', label: 'Authority Dashboard' },
 ];
+
 
 // ── Component ─────────────────────────────────────────────
 
