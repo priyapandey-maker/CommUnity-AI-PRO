@@ -23,3 +23,10 @@ export interface DuplicateResult {
   clusterId: string | null;
   similarityScore: number;
 }
+
+export interface LocationAnalysis {
+  ward: string;
+  zone: string;
+  nearbyIncidents: string[];
+  hotspotScore: number;
+}

@@ -4,6 +4,7 @@ import { KnowledgeService } from '../knowledge/knowledgeService';
 import type { IncidentAnalysisInput } from '../knowledge/knowledgeService';
 import { decisionEngineService } from './decisionEngineService';
 import { duplicateDetectionAgent } from './duplicateDetectionAgent';
+import { locationIntelligenceAgent } from './locationIntelligenceAgent';
 import { ledgerService } from './ledgerService';
 import { decisionStoreService } from './decisionStoreService';
 import { fallbackIncidentUnderstandingService } from './fallbackIncidentUnderstandingService';
@@ -35,13 +36,6 @@ class IncidentUnderstandingAgent {
   }
 }
 
-class LocationIntelligenceAgent {
-  public async analyze(_location: string): Promise<unknown> {
-    // Placeholder implementation for location intelligence
-    return { ward: 'Unknown', zone: 'Unknown', nearbyIncidents: [], hotspotScore: 0 };
-  }
-}
-
 class PriorityPredictionAgent {
   public async predict(_analysis: AnalyzeIncidentResult): Promise<unknown> {
     // Placeholder: Currently mapped to decisionEngineService for identical behavior
@@ -68,7 +62,7 @@ class ExplanationAgent {
 export class AIOrchestrator {
   private understandingAgent = new IncidentUnderstandingAgent();
   private duplicateAgent = duplicateDetectionAgent;
-  private locationAgent = new LocationIntelligenceAgent();
+  private locationAgent = locationIntelligenceAgent;
   private priorityAgent = new PriorityPredictionAgent();
   private recommendationAgent = new RecommendationAgent();
   private explanationAgent = new ExplanationAgent();
