@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppLayout } from '@/layouts';
-import { LandingPage, SubmitIncidentPage, DecisionPage, LedgerPage, AuthorityDashboard } from '@/pages';
+import { LandingPage, SubmitIncidentPage, DecisionPage, LedgerPage, AuthorityDashboard, CitizenPortal } from '@/pages';
 
 
 function App() {
@@ -13,6 +13,7 @@ function App() {
         {/* Pages that share the AppLayout (Navbar + content wrapper) */}
         <Route element={<AppLayout />}>
           <Route path="/submit" element={<SubmitIncidentPage />} />
+          <Route path="/portal" element={<CitizenPortal />} />
           <Route path="/decision/:id" element={<DecisionPage />} />
           <Route path="/ledger" element={<LedgerPage />} />
           <Route path="/authority" element={<AuthorityDashboard />} />
