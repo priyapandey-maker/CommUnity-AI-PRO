@@ -1,19 +1,20 @@
 import apiClient from '../apiClient';
-import { DashboardState, PriorityIncident, DecisionSummary, TimelineEvent, DepartmentSummary } from './dashboard.types';
+import type { DashboardState, PriorityIncident, DecisionSummary, TimelineEvent, DepartmentSummary } from './dashboard.types';
+import type { LedgerEntry } from '@community-ai/shared';
 import { mockDashboardData } from './dashboard.mock';
 
 class DashboardService {
   async getDashboardState(): Promise<DashboardState> {
     try {
       const response = await apiClient.get('/ledger');
-      const ledgerEntries = response.data || [];
+      const ledgerEntries: LedgerEntry[] = response.data || [];
 
       // Map ledger entries to PriorityIncidents
-      const liveIncidents: PriorityIncident[] = ledgerEntries.map((entry: any) => ({
+      const liveIncidents: PriorityIncident[] = ledgerEntries.map((entry) => ({
         id: entry.incidentId,
         title: `${entry.issueType || 'General'} Incident`,
         category: entry.issueType || 'Other',
-        priority: (entry.priority || 'MEDIUM').toUpperCase() as any,
+        priority: (entry.priority || 'MEDIUM').toUpperCase() as PriorityIncident['priority'],
         department: 'Emergency Response', // Default as ledger doesn't provide
         status: entry.status === 'received' ? 'PENDING' : 'IN_PROGRESS',
         timestamp: entry.timestamp,
@@ -29,11 +30,11 @@ class DashboardService {
       );
 
       // Decisions
-      const decisions: DecisionSummary[] = ledgerEntries.map((entry: any, idx: number) => ({
+      const decisions: DecisionSummary[] = ledgerEntries.map((entry, idx: number) => ({
         id: `DEC-${entry.incidentId}-${idx}`,
         incidentId: entry.incidentId,
         incidentTitle: `${entry.issueType || 'General'} Incident`,
-        priority: (entry.priority || 'MEDIUM').toUpperCase() as any,
+        priority: (entry.priority || 'MEDIUM').toUpperCase() as DecisionSummary['priority'],
         recommendedAction: entry.recommendation || 'Further review required',
         responsibleDepartment: 'Emergency Response',
         confidence: 0.9,
@@ -45,7 +46,7 @@ class DashboardService {
       decisions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       // Timeline Events
-      const timeline: TimelineEvent[] = ledgerEntries.flatMap((entry: any, idx: number) => [
+      const timeline: TimelineEvent[] = ledgerEntries.flatMap((entry, idx: number) => [
         {
           id: `EV-REP-${entry.incidentId}-${idx}`,
           incidentId: entry.incidentId,
@@ -67,7 +68,7 @@ class DashboardService {
 
       // Compute Trends (Group by date)
       const dateCounts: Record<string, number> = {};
-      ledgerEntries.forEach((entry: any) => {
+      ledgerEntries.forEach((entry) => {
         const dateStr = new Date(entry.timestamp).toLocaleDateString(undefined, { weekday: 'short' });
         dateCounts[dateStr] = (dateCounts[dateStr] || 0) + 1;
       });
@@ -75,7 +76,7 @@ class DashboardService {
 
       // Compute Category Distribution
       const categoryCounts: Record<string, number> = {};
-      ledgerEntries.forEach((entry: any) => {
+      ledgerEntries.forEach((entry) => {
         const cat = entry.issueType || 'Other';
         categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
       });

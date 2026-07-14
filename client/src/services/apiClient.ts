@@ -12,13 +12,6 @@ const apiClient = axios.create({
   timeout: 15_000,
 });
 
-// ── Request interceptor ───────────────────────────────────
-apiClient.interceptors.request.use((config) => {
-  if (import.meta.env.DEV) {
-    console.debug(`[API] ${config.method?.toUpperCase()} ${config.url}`);
-  }
-  return config;
-});
 
 // ── Response interceptor ──────────────────────────────────
 apiClient.interceptors.response.use(

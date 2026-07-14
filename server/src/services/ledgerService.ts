@@ -1,12 +1,4 @@
-export interface LedgerEntry {
-  incidentId: string;
-  timestamp: string;
-  issueType: string;
-  priority: string;
-  recommendation: string;
-  decisionReadiness: string;
-  status: string;
-}
+import type { LedgerEntry } from '@community-ai/shared';
 
 export class LedgerService {
   private ledger: LedgerEntry[] = [];

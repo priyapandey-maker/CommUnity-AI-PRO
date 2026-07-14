@@ -52,7 +52,7 @@ export function CommunityHeatmap({ data }: CommunityHeatmapProps) {
           <Tooltip 
             cursor={{ strokeDasharray: '3 3' }} 
             contentStyle={{ backgroundColor: 'var(--surface-3)', borderColor: 'var(--line)', borderRadius: '6px', color: 'var(--text-primary)' }}
-            formatter={(_value: any, _name: any, props: any) => [props.payload.name, 'Location']}
+            formatter={(_value: number | string | readonly (string | number)[] | undefined, _name: number | string | undefined, props: { payload?: { name?: string } }) => [props.payload?.name || 'Unknown', 'Location']}
           />
           <Scatter name="Risk Areas" data={chartData} fill="#8884d8">
             {chartData.map((entry, index) => (

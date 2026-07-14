@@ -49,3 +49,13 @@ export interface ExplanationResult {
   confidence: number;
   evidenceSummary: string[];
 }
+
+export interface LedgerEntry {
+  incidentId: string;
+  timestamp: string;
+  issueType: string;
+  priority: string;
+  recommendation: string;
+  decisionReadiness: string;
+  status: string;
+}

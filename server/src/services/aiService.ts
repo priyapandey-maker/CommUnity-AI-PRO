@@ -3,8 +3,8 @@ import { INCIDENT_UNDERSTANDING_SYSTEM_PROMPT } from '../prompts';
 
 // ── Simple Logger ─────────────────────────────────────────
 const aiLogger = {
-  info: (msg: string, meta?: Record<string, unknown>) => {
-    console.log(`[AI INFO] ${msg}`, meta ? JSON.stringify(meta) : '');
+  info: (_msg: string, _meta?: Record<string, unknown>) => {
+    // Debug logs removed for production
   },
   error: (msg: string, err?: unknown) => {
     console.error(`[AI ERROR] ${msg}`, err instanceof Error ? err.message : err);

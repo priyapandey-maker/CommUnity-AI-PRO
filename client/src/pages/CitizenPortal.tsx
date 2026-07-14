@@ -55,8 +55,9 @@ export default function CitizenPortal() {
       try {
         const state = await dashboardService.getDashboardState();
         setData(state);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load citizen data');
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load citizen data';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }

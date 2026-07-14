@@ -36,7 +36,7 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
           <Tooltip 
             contentStyle={{ backgroundColor: 'var(--surface-3)', borderColor: 'var(--line)', borderRadius: '6px', color: 'var(--text-primary)' }}
             itemStyle={{ color: 'var(--text-primary)' }}
-            formatter={(value: any) => [`${value}%`, 'Percentage']}
+            formatter={(value: number | string | readonly (string | number)[] | undefined) => [`${value}%`, 'Percentage']}
           />
           <Legend 
             verticalAlign="bottom" 
