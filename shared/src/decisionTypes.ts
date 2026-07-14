@@ -16,3 +16,10 @@ export interface DecisionResult {
   decisionReadiness: DecisionReadiness;
   explanation: string;
 }
+
+export interface DuplicateResult {
+  duplicate: boolean;
+  duplicates: string[];
+  clusterId: string | null;
+  similarityScore: number;
+}

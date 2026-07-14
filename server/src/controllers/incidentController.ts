@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { IncidentService } from '../services/incidentService';
-
-const incidentService = new IncidentService();
+import { orchestrator } from '../services/AIOrchestrator';
 
 /**
  * Controller to handle incident creation request.
@@ -27,7 +25,7 @@ export const createIncident = async (
     }
 
     // Process incident through service layer
-    const result = await incidentService.processIncident({
+    const result = await orchestrator.run({
       description,
       location,
       image,

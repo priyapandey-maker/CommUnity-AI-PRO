@@ -31,6 +31,13 @@ export class DecisionStoreService {
   public getDecision(id: string): StoredDecision | null {
     return this.store.get(id) || null;
   }
+
+  /**
+   * Retrieves all decision records from the in-memory store.
+   */
+  public getAllDecisions(): StoredDecision[] {
+    return Array.from(this.store.values());
+  }
 }
 
 export const decisionStoreService = new DecisionStoreService();

@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { KnowledgeService } from '../knowledge/knowledgeService';
-import { decisionEngineService } from '../services/decisionEngineService';
+import { orchestrator } from '../services/AIOrchestrator';
 import { decisionStoreService } from '../services/decisionStoreService';
 import type { IncidentAnalysisInput } from '../knowledge/knowledgeService';
-
-const knowledgeService = new KnowledgeService();
 
 /**
  * Controller to fetch a specific decision from the decision store by ID.
@@ -42,8 +39,7 @@ export const evaluateDecision = async (
       return;
     }
 
-    const context = await knowledgeService.getContext(analysis);
-    const decision = decisionEngineService.evaluate(context);
+    const decision = await orchestrator.run(analysis, true);
 
     res.status(200).json(decision);
   } catch (error) {
