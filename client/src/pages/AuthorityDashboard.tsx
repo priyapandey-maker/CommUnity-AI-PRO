@@ -6,7 +6,6 @@ import {
   CommunityHealthCard,
   DecisionCard,
   PriorityIncidentCard,
-  CommunityRiskMap,
   IncidentTable,
   InsightCard,
   Timeline,

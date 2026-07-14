@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { DepartmentSummary } from '../../services/dashboard/dashboard.types';
+import { DepartmentSummary } from '../../../services/dashboard/dashboard.types';
 
 interface DepartmentBarChartProps {
   data: DepartmentSummary[];
