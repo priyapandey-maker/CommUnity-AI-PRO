@@ -30,3 +30,10 @@ export interface LocationAnalysis {
   nearbyIncidents: string[];
   hotspotScore: number;
 }
+
+export interface PriorityPredictionResult {
+  priority: DecisionPriority;
+  riskScore: number;
+  recommendedSLA: string;
+  confidence: number;
+}

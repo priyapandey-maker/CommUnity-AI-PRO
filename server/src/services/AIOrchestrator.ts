@@ -5,6 +5,7 @@ import type { IncidentAnalysisInput } from '../knowledge/knowledgeService';
 import { decisionEngineService } from './decisionEngineService';
 import { duplicateDetectionAgent } from './duplicateDetectionAgent';
 import { locationIntelligenceAgent } from './locationIntelligenceAgent';
+import { priorityPredictionAgent } from './priorityPredictionAgent';
 import { ledgerService } from './ledgerService';
 import { decisionStoreService } from './decisionStoreService';
 import { fallbackIncidentUnderstandingService } from './fallbackIncidentUnderstandingService';
@@ -36,12 +37,6 @@ class IncidentUnderstandingAgent {
   }
 }
 
-class PriorityPredictionAgent {
-  public async predict(_analysis: AnalyzeIncidentResult): Promise<unknown> {
-    // Placeholder: Currently mapped to decisionEngineService for identical behavior
-    return null; 
-  }
-}
 
 class RecommendationAgent {
   public async recommend(_analysis: AnalyzeIncidentResult): Promise<unknown> {
@@ -63,7 +58,7 @@ export class AIOrchestrator {
   private understandingAgent = new IncidentUnderstandingAgent();
   private duplicateAgent = duplicateDetectionAgent;
   private locationAgent = locationIntelligenceAgent;
-  private priorityAgent = new PriorityPredictionAgent();
+  private priorityAgent = priorityPredictionAgent;
   private recommendationAgent = new RecommendationAgent();
   private explanationAgent = new ExplanationAgent();
   private knowledgeService = new KnowledgeService();
@@ -92,13 +87,13 @@ export class AIOrchestrator {
       const analysis = await this.understandingAgent.analyze(payload);
       
       // Agent 2: Duplicate Detection
-      await this.duplicateAgent.detect(analysis);
+      const duplicateResult = await this.duplicateAgent.detect(analysis);
       
       // Agent 3: Location Intelligence
-      await this.locationAgent.analyze(payload.location);
+      const locationResult = await this.locationAgent.analyze(payload.location);
       
       // Agent 4: Priority Prediction
-      await this.priorityAgent.predict(analysis);
+      await this.priorityAgent.predict(analysis, locationResult, duplicateResult);
       
       // Agent 5: Recommendation
       await this.recommendationAgent.recommend(analysis);
