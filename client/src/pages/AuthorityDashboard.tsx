@@ -24,6 +24,8 @@ export default function AuthorityDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -37,6 +39,11 @@ export default function AuthorityDashboard() {
     }
   };
 
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -48,7 +55,14 @@ export default function AuthorityDashboard() {
   if (!data) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in relative">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-4 right-4 p-4 rounded-md shadow-lg z-50 text-white font-medium ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+          {toast.message}
+        </div>
+      )}
+
       {/* 1. Authority Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-6">
         <div>
@@ -102,7 +116,12 @@ export default function AuthorityDashboard() {
         <h2 className="section-label mb-4">Decision Center</h2>
         <div className="grid grid-cols-1 gap-6">
           {data.decisions.map(decision => (
-            <DecisionCard key={decision.id} decision={decision} />
+            <DecisionCard 
+              key={decision.id} 
+              decision={decision} 
+              onActionComplete={fetchData}
+              showToast={showToast}
+            />
           ))}
           {data.decisions.length === 0 && <NoRecommendations />}
         </div>
@@ -136,7 +155,11 @@ export default function AuthorityDashboard() {
       {/* 7. Live Incident Intelligence */}
       <section>
         <h2 className="section-label mb-4">Live Incident Intelligence</h2>
-        <IncidentTable incidents={data.liveIncidents} />
+        <IncidentTable 
+          incidents={data.liveIncidents} 
+          onActionComplete={fetchData}
+          showToast={showToast}
+        />
       </section>
 
       {/* 8 & 9. Community Analytics & Decision Timeline */}

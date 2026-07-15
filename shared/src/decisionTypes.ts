@@ -59,4 +59,5 @@ export interface LedgerEntry {
   decisionReadiness: string;
   status: string;
   userId?: string;
+  department?: string;
 }

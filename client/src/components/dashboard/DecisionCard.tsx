@@ -1,15 +1,39 @@
+import { useState } from 'react';
 import { DecisionSummary } from '@/services/dashboard/dashboard.types';
 import { StatusBadge } from './StatusBadge';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { EvidencePanel } from './EvidencePanel';
+import { dashboardService } from '@/services/dashboard/dashboard.service';
 
 interface DecisionCardProps {
   decision: DecisionSummary;
+  onActionComplete?: () => void;
+  showToast?: (message: string, type: 'success' | 'error') => void;
 }
 
-export function DecisionCard({ decision }: DecisionCardProps) {
+export function DecisionCard({ decision, onActionComplete, showToast }: DecisionCardProps) {
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async (action: 'APPROVE' | 'REJECT') => {
+    setLoading(true);
+    try {
+      await dashboardService.processDecision(decision.incidentId, action);
+      if (showToast) showToast(`Decision ${action.toLowerCase()}ed successfully!`, 'success');
+      if (onActionComplete) onActionComplete();
+    } catch (error) {
+      if (showToast) showToast(`Failed to ${action.toLowerCase()} decision.`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="civic-card p-6 flex flex-col gap-4">
+    <div className="civic-card p-6 flex flex-col gap-4 relative">
+      {loading && (
+        <div className="absolute inset-0 bg-surface-1/50 flex items-center justify-center rounded-lg z-10 backdrop-blur-sm">
+          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -57,10 +81,18 @@ export function DecisionCard({ decision }: DecisionCardProps) {
       </div>
       
       <div className="mt-2 pt-4 border-t border-line flex justify-end gap-3">
-        <button className="px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-2 rounded-md transition-colors">
+        <button 
+          onClick={() => handleAction('REJECT')}
+          disabled={loading || decision.status !== 'PENDING_REVIEW'}
+          className="px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-2 rounded-md transition-colors disabled:opacity-50"
+        >
           Reject
         </button>
-        <button className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm">
+        <button 
+          onClick={() => handleAction('APPROVE')}
+          disabled={loading || decision.status !== 'PENDING_REVIEW'}
+          className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm disabled:opacity-50"
+        >
           Approve Decision
         </button>
       </div>

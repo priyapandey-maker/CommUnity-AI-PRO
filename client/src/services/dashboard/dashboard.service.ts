@@ -15,8 +15,8 @@ class DashboardService {
         title: `${entry.issueType || 'General'} Incident`,
         category: entry.issueType || 'Other',
         priority: (entry.priority || 'MEDIUM').toUpperCase() as PriorityIncident['priority'],
-        department: 'Emergency Response', // Default as ledger doesn't provide
-        status: entry.status === 'received' ? 'PENDING' : 'IN_PROGRESS',
+        department: entry.department || 'Emergency Response', // Added mapping from ledger
+        status: (entry.status === 'APPROVED' || entry.status === 'REJECTED' || entry.status === 'received' || !entry.status) ? 'PENDING' : (entry.status as PriorityIncident['status']),
         timestamp: entry.timestamp,
         confidence: 0.95,
       }));
@@ -134,6 +134,14 @@ class DashboardService {
       console.error('Error fetching dashboard state:', error);
       throw error;
     }
+  }
+
+  async updateIncidentStatus(incidentId: string, status: string, department?: string): Promise<void> {
+    await apiClient.patch(`/incident/${incidentId}/status`, { status, department });
+  }
+
+  async processDecision(incidentId: string, action: 'APPROVE' | 'REJECT'): Promise<void> {
+    await apiClient.patch(`/incident/${incidentId}/decision`, { action });
   }
 }
 

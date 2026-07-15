@@ -90,3 +90,52 @@ export const getIncidentById = async (req: Request, res: Response): Promise<void
 
   res.status(200).json(incident);
 };
+
+export const updateIncidentStatus = async (req: Request, res: Response): Promise<void> => {
+  if (!req.user || (req.user.role !== Role.AUTHORITY && req.user.role !== Role.ADMIN)) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+
+  const { id } = req.params;
+  const { status, department } = req.body;
+
+  const incident = incidentStore.find(i => i.id === id);
+  if (incident) {
+    if (status) incident.status = status;
+    incident.updatedAt = new Date();
+  }
+
+  const ledgerEntry = ledgerService.getEntries().find(e => e.incidentId === id);
+  if (ledgerEntry) {
+    if (status) ledgerEntry.status = status;
+    if (department) ledgerEntry.department = department;
+  }
+
+  res.status(200).json({ success: true, status });
+};
+
+export const processDecision = async (req: Request, res: Response): Promise<void> => {
+  if (!req.user || (req.user.role !== Role.AUTHORITY && req.user.role !== Role.ADMIN)) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+
+  const { id } = req.params;
+  const { action } = req.body; // 'APPROVE' or 'REJECT'
+
+  const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+
+  const incident = incidentStore.find(i => i.id === id);
+  if (incident) {
+    incident.status = newStatus;
+    incident.updatedAt = new Date();
+  }
+
+  const ledgerEntry = ledgerService.getEntries().find(e => e.incidentId === id);
+  if (ledgerEntry) {
+    ledgerEntry.status = newStatus;
+  }
+
+  res.status(200).json({ success: true, status: newStatus });
+};
