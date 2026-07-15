@@ -54,7 +54,8 @@ export default function Navbar() {
   const navLinks = [
     { to: '/ledger', label: 'Decision Ledger', show: true },
     { to: '/submit', label: 'Report Incident', show: !!user },
-    { to: '/portal', label: 'My Reports', show: !!user && user.role === 'CITIZEN' },
+    { to: '/my-reports', label: 'My Reports', show: !!user && user.role === 'CITIZEN' },
+    { to: '/portal', label: 'Dashboard', show: !!user && user.role === 'CITIZEN' },
     { to: '/authority', label: 'Authority Dashboard', show: !!user && (user.role === 'AUTHORITY' || user.role === 'ADMIN') },
   ].filter(link => link.show);
 

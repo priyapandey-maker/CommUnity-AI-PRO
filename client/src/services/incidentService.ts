@@ -91,4 +91,12 @@ export async function getLedger(): Promise<LedgerEntry[]> {
   return data;
 }
 
-
+/**
+ * GET /incident/my
+ *
+ * Fetches incidents created by the currently authenticated user.
+ */
+export async function getMyIncidents(): Promise<LedgerEntry[]> {
+  const { data } = await apiClient.get<LedgerEntry[]>('/incident/my');
+  return data;
+}

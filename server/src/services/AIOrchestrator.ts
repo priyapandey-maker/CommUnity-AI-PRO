@@ -17,6 +17,7 @@ export interface OrchestratorInput {
   description: string;
   location: string;
   image?: string;
+  userId?: string;
 }
 
 // ── Placeholder AI Agents ───────────────────────────────────
@@ -110,6 +111,7 @@ export class AIOrchestrator {
       // Finalization and Storage
       ledgerService.addEntry({
         incidentId,
+        userId: payload.userId,
         issueType: analysis.issueType,
         priority: decision.priority,
         recommendation: decision.recommendation,

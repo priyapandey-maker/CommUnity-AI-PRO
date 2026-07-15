@@ -58,4 +58,5 @@ export interface LedgerEntry {
   recommendation: string;
   decisionReadiness: string;
   status: string;
+  userId?: string;
 }

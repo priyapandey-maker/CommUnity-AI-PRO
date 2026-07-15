@@ -8,3 +8,4 @@ export { default as LandingPage } from './LandingPage';
 export * from './auth/LoginPage';
 export * from './auth/RegisterPage';
 export * from './admin/AdminDashboard';
+export * from './citizen/MyReportsPage';

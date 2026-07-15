@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppLayout } from '@/layouts';
-import { LandingPage, SubmitIncidentPage, DecisionPage, LedgerPage, AuthorityDashboard, CitizenPortal, LoginPage, RegisterPage, AdminDashboard } from '@/pages';
+import { LandingPage, SubmitIncidentPage, DecisionPage, LedgerPage, AuthorityDashboard, CitizenPortal, LoginPage, RegisterPage, AdminDashboard, MyReportsPage } from '@/pages';
 import { AuthProvider } from '@/contexts';
 import { ProtectedRoute, RoleRoute } from '@/components';
 
@@ -21,6 +21,11 @@ function App() {
             <Route path="/submit" element={
               <ProtectedRoute>
                 <SubmitIncidentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-reports" element={
+              <ProtectedRoute>
+                <MyReportsPage />
               </ProtectedRoute>
             } />
             <Route path="/portal" element={

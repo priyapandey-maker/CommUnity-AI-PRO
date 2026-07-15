@@ -31,6 +31,7 @@ export const createIncident = async (
       description,
       location,
       image,
+      userId: req.user?.id, // Optional, depending on if authMiddleware is used
     });
 
     if ('incidentId' in result) {
@@ -55,17 +56,17 @@ export const createIncident = async (
   }
 };
 
+import { ledgerService } from '../services/ledgerService';
+
 export const getMyIncidents = async (req: Request, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
 
-  const myIncidents = incidentStore
-    .filter(i => i.userId === req.user?.id)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  res.status(200).json(myIncidents);
+  const allEntries = ledgerService.getEntries();
+  const myEntries = allEntries.filter(entry => entry.userId === req.user?.id);
+  res.status(200).json(myEntries);
 };
 
 export const getIncidentById = async (req: Request, res: Response): Promise<void> => {
