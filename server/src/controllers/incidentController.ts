@@ -58,15 +58,15 @@ export const createIncident = async (
 
 import { ledgerService } from '../services/ledgerService';
 
-export const getMyIncidents = async (req: Request, res: Response): Promise<void> => {
-  if (!req.user) {
+export const getMyIncidents = (req: Request, res: Response): void => {
+  const userId = req.user?.id;
+  if (!userId) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
-
   const allEntries = ledgerService.getEntries();
-  const myEntries = allEntries.filter(entry => entry.userId === req.user?.id);
-  res.status(200).json(myEntries);
+  const myEntries = allEntries.filter(entry => entry.userId === userId);
+  res.json(myEntries);
 };
 
 export const getIncidentById = async (req: Request, res: Response): Promise<void> => {
