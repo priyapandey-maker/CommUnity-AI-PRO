@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppLayout } from '@/layouts';
-import { LandingPage, SubmitIncidentPage, DecisionPage, LedgerPage, AuthorityDashboard, CitizenPortal, LoginPage, RegisterPage } from '@/pages';
+import { LandingPage, SubmitIncidentPage, DecisionPage, LedgerPage, AuthorityDashboard, CitizenPortal, LoginPage, RegisterPage, AdminDashboard } from '@/pages';
 import { AuthProvider } from '@/contexts';
 import { ProtectedRoute, RoleRoute } from '@/components';
 
@@ -38,6 +38,12 @@ function App() {
             <Route path="/authority" element={
               <RoleRoute allowedRoles={['AUTHORITY', 'ADMIN']}>
                 <AuthorityDashboard />
+              </RoleRoute>
+            } />
+            
+            <Route path="/admin" element={
+              <RoleRoute allowedRoles={['ADMIN']}>
+                <AdminDashboard />
               </RoleRoute>
             } />
             

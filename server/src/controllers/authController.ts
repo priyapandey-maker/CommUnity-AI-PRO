@@ -5,7 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { users } from '../models/UserStore';
 import { Role, User, UserResponse, AuthResponse } from '@community-ai/shared';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is not defined');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '1h';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
