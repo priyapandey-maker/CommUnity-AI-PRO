@@ -226,3 +226,70 @@ export const getFilteredIncidents = (req: Request, res: Response): void => {
   
   res.status(200).json(filtered);
 };
+
+export const getActivityFeed = (req: Request, res: Response): void => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const activities: any[] = [];
+  if (req.user.role === Role.CITIZEN) {
+    const userIncidents = incidentStore.filter(i => i.userId === req.user?.id);
+    userIncidents.forEach(inc => {
+      inc.timeline.forEach(t => activities.push({ incidentId: inc.id, ...t }));
+    });
+  } else {
+    incidentStore.forEach(inc => {
+      inc.timeline.forEach(t => activities.push({ incidentId: inc.id, ...t }));
+    });
+  }
+  
+  activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  res.status(200).json(activities);
+};
+
+export const getRecentActions = (req: Request, res: Response): void => {
+  if (!req.user || (req.user.role !== Role.AUTHORITY && req.user.role !== Role.ADMIN)) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  
+  const entries = ledgerService.getEntries();
+  const recent = [...entries].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 20);
+  res.status(200).json(recent);
+};
+
+export const exportIncidents = (req: Request, res: Response): void => {
+  if (!req.user || (req.user.role !== Role.AUTHORITY && req.user.role !== Role.ADMIN)) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  
+  // Return the raw store for now, typically this would be transformed to CSV
+  res.status(200).json(incidentStore);
+};
+
+export const pollIncidents = (req: Request, res: Response): void => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  
+  // Get latest updated incident timestamp
+  let latest = new Date(0);
+  let relevantIncidents = incidentStore;
+  
+  if (req.user.role === Role.CITIZEN) {
+    relevantIncidents = incidentStore.filter(i => i.userId === req.user?.id);
+  }
+  
+  relevantIncidents.forEach(inc => {
+    if (inc.updatedAt > latest) {
+      latest = inc.updatedAt;
+    }
+  });
+  
+  res.status(200).json({ lastUpdated: latest });
+};
