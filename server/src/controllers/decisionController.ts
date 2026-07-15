@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { orchestrator } from '../services/AIOrchestrator';
-import { decisionStoreService } from '../services/decisionStoreService';
 import type { IncidentAnalysisInput } from '../knowledge/knowledgeService';
+
+import { buildFullDecisionView } from '../utils/decisionView';
 
 /**
  * Controller to fetch a specific decision from the decision store by ID.
@@ -10,14 +11,14 @@ import type { IncidentAnalysisInput } from '../knowledge/knowledgeService';
 export const getDecision = (req: Request, res: Response): void => {
   try {
     const { id } = req.params;
-    const decisionRecord = decisionStoreService.getDecision(id);
+    const result = buildFullDecisionView(id, req);
 
-    if (!decisionRecord) {
-      res.status(404).json({ error: 'Decision not found' });
+    if (result.error) {
+      res.status(result.status).json({ error: result.error });
       return;
     }
 
-    res.status(200).json(decisionRecord);
+    res.status(200).json(result.data);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error while retrieving decision record.' });
   }

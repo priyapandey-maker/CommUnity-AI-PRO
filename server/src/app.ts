@@ -32,8 +32,10 @@ app.use('/api/auth', authRouter);
 app.use('/incident', incidentRouter); // Keep for backwards compatibility
 app.use('/api/incidents', incidentRouter); // New route matching REST pattern
 app.use('/analyze', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), analyzeRouter);
-app.use('/decision', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), decisionRouter);
-app.use('/ledger', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), ledgerRouter);
+app.use('/decision', authMiddleware, decisionRouter);
+app.use('/api/decision', authMiddleware, decisionRouter);
+app.use('/ledger', authMiddleware, ledgerRouter);
+app.use('/api/ledger', authMiddleware, ledgerRouter);
 
 // ── Error handler (must be last) ────────────────────────────
 app.use(errorHandler);
