@@ -29,7 +29,8 @@ app.use(express.json());
 // ── Routes ──────────────────────────────────────────────────
 app.use('/health', healthRouter);
 app.use('/api/auth', authRouter);
-app.use('/incident', incidentRouter); // Depending on requirement, incidents could be created by anyone, but let's keep it open for now or add auth if needed. The prompt says "Protect authority and admin routes".
+app.use('/incident', incidentRouter); // Keep for backwards compatibility
+app.use('/api/incidents', incidentRouter); // New route matching REST pattern
 app.use('/analyze', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), analyzeRouter);
 app.use('/decision', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), decisionRouter);
 app.use('/ledger', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), ledgerRouter);

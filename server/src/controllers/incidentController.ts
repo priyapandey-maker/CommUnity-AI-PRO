@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { orchestrator } from '../services/AIOrchestrator';
+import { incidentStore, IncidentRecord } from '../models/IncidentStore';
+import { Role } from '@community-ai/shared';
 
 /**
  * Controller to handle incident creation request.
@@ -31,8 +33,59 @@ export const createIncident = async (
       image,
     });
 
+    if ('incidentId' in result) {
+      const record: IncidentRecord = {
+        id: result.incidentId,
+        userId: req.user?.id,
+        description,
+        location,
+        image,
+        status: 'ANALYZED',
+        priority: result.decision?.priority || 'UNKNOWN',
+        decisionId: result.incidentId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      incidentStore.push(record);
+    }
+
     res.status(201).json(result);
   } catch (error) {
     next(error);
   }
+};
+
+export const getMyIncidents = async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const myIncidents = incidentStore
+    .filter(i => i.userId === req.user?.id)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  res.status(200).json(myIncidents);
+};
+
+export const getIncidentById = async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { id } = req.params;
+  const incident = incidentStore.find(i => i.id === id);
+
+  if (!incident) {
+    res.status(404).json({ error: 'Incident not found' });
+    return;
+  }
+
+  if (req.user.role === Role.CITIZEN && incident.userId !== req.user.id) {
+    res.status(403).json({ error: 'Forbidden: You do not have access to this incident' });
+    return;
+  }
+
+  res.status(200).json(incident);
 };
