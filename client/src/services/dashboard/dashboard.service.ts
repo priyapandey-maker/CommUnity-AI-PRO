@@ -2,12 +2,16 @@ import apiClient from '../apiClient';
 import type { DashboardState, PriorityIncident, DecisionSummary, TimelineEvent, DepartmentSummary } from './dashboard.types';
 import type { LedgerEntry } from '@community-ai/shared';
 import { mockDashboardData } from './dashboard.mock';
+import { analyticsService } from '../analyticsService';
 
 class DashboardService {
   async getDashboardState(): Promise<DashboardState> {
     try {
       const response = await apiClient.get('/ledger');
       const ledgerEntries: LedgerEntry[] = response.data || [];
+
+      // Fetch true backend analytics
+      const analytics = await analyticsService.getAnalytics().catch(() => null);
 
       const uniqueEntries = new Map<string, LedgerEntry>();
       const timeline: TimelineEvent[] = [];
@@ -127,15 +131,15 @@ class DashboardService {
 
       return {
         metrics: {
-          totalIncidents: hasLive ? liveIncidents.length : mockDashboardData.metrics.totalIncidents,
-          criticalIncidents: hasLive ? priorityQueue.length : mockDashboardData.metrics.criticalIncidents,
+          totalIncidents: analytics ? analytics.totalIncidents : (hasLive ? liveIncidents.length : mockDashboardData.metrics.totalIncidents),
+          criticalIncidents: analytics ? analytics.criticalIncidents : (hasLive ? priorityQueue.length : mockDashboardData.metrics.criticalIncidents),
           escalations: hasLive ? priorityQueue.length : mockDashboardData.metrics.escalations,
           departmentsActive: 1,
           pendingDecisions: hasLive ? decisions.length : mockDashboardData.metrics.pendingDecisions,
         },
         health: {
-          activeIncidents: hasLive ? liveIncidents.length : mockDashboardData.health.activeIncidents,
-          resolvedToday: 0,
+          activeIncidents: analytics ? analytics.inProgressIncidents : (hasLive ? liveIncidents.length : mockDashboardData.health.activeIncidents),
+          resolvedToday: analytics ? analytics.resolvedIncidents : 0,
           averageResponseTimeMinutes: 15,
           healthScore: hasLive ? Math.max(0, 100 - priorityQueue.length * 10) : mockDashboardData.health.healthScore,
         },

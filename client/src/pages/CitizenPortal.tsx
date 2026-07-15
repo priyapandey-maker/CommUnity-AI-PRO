@@ -2,13 +2,21 @@ import { useState, useEffect } from 'react';
 import { PageContainer, SectionTitle, Card, Badge, Spinner, PrimaryButton } from '@/components';
 import { dashboardService } from '@/services/dashboard/dashboard.service';
 import type { DashboardState } from '@/services/dashboard/dashboard.types';
+import { notificationService, AppNotification } from '@/services/notificationService';
 import { useNavigate } from 'react-router-dom';
 
-function BellIcon() {
+function BellIcon({ unreadCount }: { unreadCount?: number }) {
   return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
+    <div className="relative">
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+      {!!unreadCount && unreadCount > 0 && (
+        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+          {unreadCount}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -47,18 +55,24 @@ function FileTextIcon() {
 export default function CitizenPortal() {
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardState | null>(null);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Filters for History
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [priorityFilter, setPriorityFilter] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     async function load() {
       try {
-        const state = await dashboardService.getDashboardState();
+        const [state, notifs] = await Promise.all([
+          dashboardService.getDashboardState(),
+          notificationService.getNotifications()
+        ]);
         setData(state);
+        setNotifications(notifs);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load citizen data';
         setError(errorMessage);
@@ -68,6 +82,18 @@ export default function CitizenPortal() {
     }
     load();
   }, []);
+
+  const handleNotificationClick = async (notif: AppNotification) => {
+    if (notif.isRead) return;
+    try {
+      await notificationService.markAsRead(notif.id);
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   if (loading) {
     return (
@@ -94,14 +120,22 @@ export default function CitizenPortal() {
   const historyIncidents = data.liveIncidents.slice(1).filter(inc => {
     if (statusFilter !== 'ALL' && inc.status !== statusFilter) return false;
     if (priorityFilter !== 'ALL' && inc.priority !== priorityFilter) return false;
+    if (searchQuery) {
+      const sq = searchQuery.toLowerCase();
+      if (
+        !inc.id.toLowerCase().includes(sq) &&
+        !inc.title.toLowerCase().includes(sq) &&
+        !inc.category.toLowerCase().includes(sq) &&
+        !inc.status.toLowerCase().includes(sq)
+      ) {
+        return false;
+      }
+    }
     return true;
   });
   const currentDecision = currentIncident ? data.decisions.find(d => d.incidentId === currentIncident.id) : null;
   const currentTimeline = currentIncident ? data.timeline.filter(t => t.incidentId === currentIncident.id).reverse() : [];
   
-  // All timeline events for notifications panel (recent 5)
-  const allNotifications = data.timeline.slice().reverse().slice(0, 5);
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING': return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
@@ -315,10 +349,17 @@ export default function CitizenPortal() {
           {/* History */}
           <Card variant="default" padding="lg">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-line pb-3 mb-4 gap-3">
-              <h3 className="text-sm font-bold text-secondary font-display">
+              <h3 className="text-sm font-bold text-secondary font-display whitespace-nowrap">
                 Report History
               </h3>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                <input 
+                  type="text" 
+                  placeholder="Search reports..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="px-2 py-1 bg-surface-2 border border-line rounded text-xs text-primary focus:outline-none focus:border-brand-500 w-full sm:w-auto"
+                />
                 <select 
                   value={statusFilter} 
                   onChange={e => setStatusFilter(e.target.value)} 
@@ -372,28 +413,49 @@ export default function CitizenPortal() {
         <div className="lg:col-span-1 flex flex-col gap-6">
           <Card variant="glass" padding="lg" className="h-full border-brand-500/10">
             <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4 flex items-center gap-2">
-              <BellIcon />
+              <BellIcon unreadCount={unreadCount} />
               Notifications
             </h3>
             
             <div className="flex flex-col gap-3">
-              {allNotifications.map((notif, i) => {
+              {notifications.map((notif) => {
                 const isResolved = notif.type === 'RESOLUTION';
                 const isDecision = notif.type === 'DECISION';
+                
+                // Derive title from type since backend Notification doesn't have a title field
+                const title = notif.type === 'STATUS_CHANGE' ? 'Status Update' 
+                            : notif.type === 'ASSIGNMENT' ? 'New Assignment'
+                            : notif.type === 'RESOLUTION' ? 'Incident Resolved'
+                            : notif.type === 'DECISION' ? 'AI Evaluation'
+                            : 'System Notification';
+
                 return (
-                  <div key={i} className={`p-3 border rounded-lg animate-fade-in ${isResolved ? 'bg-emerald-500/10 border-emerald-500/20' : isDecision ? 'bg-brand-500/10 border-brand-500/20' : 'bg-surface-2 border-line'}`}>
+                  <div 
+                    key={notif.id} 
+                    onClick={() => handleNotificationClick(notif)}
+                    className={`p-3 border rounded-lg transition-all cursor-pointer ${
+                      notif.isRead ? 'opacity-60' : 'shadow-md shadow-brand-500/5 hover:scale-[1.02]'
+                    } ${
+                      isResolved ? 'bg-emerald-500/10 border-emerald-500/20' 
+                      : isDecision ? 'bg-brand-500/10 border-brand-500/20' 
+                      : 'bg-surface-2 border-line'
+                    }`}
+                  >
                     <div className="flex justify-between items-start mb-1">
-                      <span className={`text-xs font-bold ${isResolved ? 'text-emerald-500' : isDecision ? 'text-brand-500' : 'text-primary'}`}>{notif.title}</span>
-                      <span className="text-[10px] text-muted">{new Date(notif.timestamp).toLocaleDateString()}</span>
+                      <span className={`text-xs font-bold ${isResolved ? 'text-emerald-500' : isDecision ? 'text-brand-500' : 'text-primary'}`}>
+                        {title}
+                        {!notif.isRead && <span className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500"></span>}
+                      </span>
+                      <span className="text-[10px] text-muted">{new Date(notif.createdAt).toLocaleDateString()}</span>
                     </div>
                     <p className="text-xs text-secondary leading-relaxed">
-                      {notif.description}
+                      {notif.message}
                     </p>
                   </div>
                 );
               })}
               
-              {allNotifications.length === 0 && (
+              {notifications.length === 0 && (
                 <div className="text-xs text-muted text-center py-6">
                   You're all caught up! No new notifications.
                 </div>
