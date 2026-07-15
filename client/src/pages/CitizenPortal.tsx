@@ -50,6 +50,10 @@ export default function CitizenPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Filters for History
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [priorityFilter, setPriorityFilter] = useState<string>('ALL');
+
   useEffect(() => {
     async function load() {
       try {
@@ -86,11 +90,17 @@ export default function CitizenPortal() {
     );
   }
 
-  // Pick the most recent incident to track
   const currentIncident = data.liveIncidents.length > 0 ? data.liveIncidents[0] : null;
-  const historyIncidents = data.liveIncidents.slice(1);
+  const historyIncidents = data.liveIncidents.slice(1).filter(inc => {
+    if (statusFilter !== 'ALL' && inc.status !== statusFilter) return false;
+    if (priorityFilter !== 'ALL' && inc.priority !== priorityFilter) return false;
+    return true;
+  });
   const currentDecision = currentIncident ? data.decisions.find(d => d.incidentId === currentIncident.id) : null;
   const currentTimeline = currentIncident ? data.timeline.filter(t => t.incidentId === currentIncident.id).reverse() : [];
+  
+  // All timeline events for notifications panel (recent 5)
+  const allNotifications = data.timeline.slice().reverse().slice(0, 5);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -107,9 +117,29 @@ export default function CitizenPortal() {
     return 'pending';
   };
 
-  let currentStepIndex = 1; // 0 = Submitted, 1 = Under Review, 2 = Action Planned, 3 = Dispatched
-  if (currentDecision) currentStepIndex = 2;
-  if (currentIncident?.status === 'IN_PROGRESS') currentStepIndex = 3;
+  let currentStepIndex = 1;
+  if (currentIncident) {
+    if (currentIncident.status === 'PENDING') currentStepIndex = 1;
+    if (currentIncident.status === 'ASSIGNED') currentStepIndex = 2;
+    if (currentIncident.status === 'IN_PROGRESS') currentStepIndex = 3;
+    if (currentIncident.status === 'RESOLVED') currentStepIndex = 4;
+  }
+
+  // Find department info
+  const assignedDept = currentIncident ? data.departments.find(d => d.name === currentIncident.department) : null;
+  
+  // Calculate estimated response
+  const getEstimatedResponse = (priority: string) => {
+    switch (priority) {
+      case 'CRITICAL': return '1-2 Hours';
+      case 'HIGH': return '24 Hours';
+      case 'MEDIUM': return '48 Hours';
+      case 'LOW': return '72 Hours';
+      default: return 'TBD';
+    }
+  };
+
+  const resolvedEvent = currentTimeline.find(t => t.type === 'RESOLUTION' || t.title.includes('Resolved'));
 
   return (
     <PageContainer  className="py-8 md:py-12">
@@ -136,23 +166,49 @@ export default function CitizenPortal() {
         <div className="lg:col-span-2 flex flex-col gap-6">
           {currentIncident ? (
             <Card variant="default" padding="lg">
-              <div className="flex justify-between items-start mb-6 border-b border-line pb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-bold text-primary font-display">
-                      {currentIncident.title}
-                    </h3>
-                    <div className={`px-2.5 py-1 rounded-full border text-xs font-semibold ${getStatusColor(currentIncident.status)}`}>
-                      {currentIncident.status.replace('_', ' ')}
+              <div className="flex flex-col gap-4 mb-6 border-b border-line pb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-bold text-primary font-display">
+                        {currentIncident.title}
+                      </h3>
+                      <div className={`px-2.5 py-1 rounded-full border text-xs font-semibold ${getStatusColor(currentIncident.status)}`}>
+                        {currentIncident.status.replace('_', ' ')}
+                      </div>
                     </div>
+                    <p className="text-sm text-muted">
+                      Submitted on {new Date(currentIncident.timestamp).toLocaleDateString()} at {new Date(currentIncident.timestamp).toLocaleTimeString()}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted">
-                    Submitted on {new Date(currentIncident.timestamp).toLocaleDateString()} at {new Date(currentIncident.timestamp).toLocaleTimeString()}
-                  </p>
+                  <Badge variant={currentIncident.priority === 'CRITICAL' || currentIncident.priority === 'HIGH' ? 'error' : 'warning'}>
+                    Priority: {currentIncident.priority}
+                  </Badge>
                 </div>
-                <Badge variant={currentIncident.priority === 'CRITICAL' || currentIncident.priority === 'HIGH' ? 'error' : 'warning'}>
-                  Priority: {currentIncident.priority}
-                </Badge>
+                
+                {/* Department & Response Tracking */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                  {currentIncident.department && (
+                    <div className="p-3 bg-surface-2 rounded-lg border border-line">
+                      <p className="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Assigned Department</p>
+                      <p className="text-sm font-bold text-primary">{currentIncident.department}</p>
+                      {assignedDept && (
+                        <p className="text-xs text-secondary mt-1">
+                          Queue: <span className="font-semibold">{assignedDept.openCases} cases ahead</span> ({assignedDept.workload} workload)
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <div className="p-3 bg-surface-2 rounded-lg border border-line">
+                    <p className="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Estimated Response</p>
+                    <p className="text-sm font-bold text-primary">{getEstimatedResponse(currentIncident.priority)}</p>
+                    {resolvedEvent && currentIncident.status === 'RESOLVED' && (
+                      <p className="text-xs text-emerald-500 font-semibold mt-1">
+                        Resolved on {new Date(resolvedEvent.timestamp).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Status Visualization */}
@@ -219,18 +275,23 @@ export default function CitizenPortal() {
               <div>
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-4">Event Timeline</h4>
                 <div className="flex flex-col gap-4 relative before:absolute before:inset-y-0 before:left-2.5 before:w-px before:bg-line ml-1">
-                  {currentTimeline.map((event, idx) => (
-                    <div key={idx} className="relative pl-8">
-                      <div className="absolute left-1.5 top-1.5 w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-surface-1" />
-                      <div className="bg-surface-2 border border-line rounded-lg p-3">
+                  {currentTimeline.map((event, idx) => {
+                    const isAuthority = event.type === 'STATUS_UPDATE' || event.type === 'ESCALATION' || event.type === 'ASSIGNMENT' || event.type === 'RESOLUTION';
+                    return (
+                    <div key={idx} className="relative pl-8 animate-fade-in">
+                      <div className={`absolute left-1.5 top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-surface-1 ${isAuthority ? 'bg-amber-500' : 'bg-brand-500'}`} />
+                      <div className={`bg-surface-2 border border-line rounded-lg p-3 ${isAuthority ? 'border-amber-500/30 bg-amber-500/5' : ''}`}>
                         <div className="flex justify-between items-start mb-1">
-                          <span className="text-xs font-bold text-primary">{event.title}</span>
+                          <span className="text-xs font-bold text-primary flex items-center flex-wrap gap-2">
+                            {event.title}
+                            {isAuthority && <span className="text-[9px] uppercase tracking-wider text-amber-600 bg-amber-500/20 px-1.5 py-0.5 rounded">Authority Action</span>}
+                          </span>
                           <span className="text-[10px] text-muted">{new Date(event.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         </div>
                         <p className="text-xs text-secondary">{event.description}</p>
                       </div>
                     </div>
-                  ))}
+                  )})}
                   {currentTimeline.length === 0 && (
                     <div className="text-xs text-muted pl-8 py-2">Waiting for first timeline event...</div>
                   )}
@@ -253,9 +314,35 @@ export default function CitizenPortal() {
 
           {/* History */}
           <Card variant="default" padding="lg">
-            <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
-              Report History
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-line pb-3 mb-4 gap-3">
+              <h3 className="text-sm font-bold text-secondary font-display">
+                Report History
+              </h3>
+              <div className="flex gap-2">
+                <select 
+                  value={statusFilter} 
+                  onChange={e => setStatusFilter(e.target.value)} 
+                  className="px-2 py-1 bg-surface-2 border border-line rounded text-xs text-primary focus:outline-none"
+                >
+                  <option value="ALL">All Status</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="ASSIGNED">Assigned</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="RESOLVED">Resolved</option>
+                </select>
+                <select 
+                  value={priorityFilter} 
+                  onChange={e => setPriorityFilter(e.target.value)} 
+                  className="px-2 py-1 bg-surface-2 border border-line rounded text-xs text-primary focus:outline-none"
+                >
+                  <option value="ALL">All Priorities</option>
+                  <option value="CRITICAL">Critical</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LOW">Low</option>
+                </select>
+              </div>
+            </div>
             {historyIncidents.length > 0 ? (
               <div className="flex flex-col gap-3">
                 {historyIncidents.map(inc => (
@@ -275,7 +362,7 @@ export default function CitizenPortal() {
               </div>
             ) : (
               <p className="text-xs text-muted py-4 text-center border border-dashed border-line rounded-lg">
-                No historical reports to display.
+                No historical reports match your criteria.
               </p>
             )}
           </Card>
@@ -290,41 +377,23 @@ export default function CitizenPortal() {
             </h3>
             
             <div className="flex flex-col gap-3">
-              {currentIncident && currentDecision && (
-                <div className="p-3 bg-brand-50/50 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-900/30 rounded-lg">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold text-brand-700 dark:text-brand-300">Decision Reached</span>
-                    <span className="text-[10px] text-brand-500">Just now</span>
+              {allNotifications.map((notif, i) => {
+                const isResolved = notif.type === 'RESOLUTION';
+                const isDecision = notif.type === 'DECISION';
+                return (
+                  <div key={i} className={`p-3 border rounded-lg animate-fade-in ${isResolved ? 'bg-emerald-500/10 border-emerald-500/20' : isDecision ? 'bg-brand-500/10 border-brand-500/20' : 'bg-surface-2 border-line'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <span className={`text-xs font-bold ${isResolved ? 'text-emerald-500' : isDecision ? 'text-brand-500' : 'text-primary'}`}>{notif.title}</span>
+                      <span className="text-[10px] text-muted">{new Date(notif.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-xs text-secondary leading-relaxed">
+                      {notif.description}
+                    </p>
                   </div>
-                  <p className="text-xs text-secondary leading-relaxed">
-                    Your report "{currentIncident.title}" has been reviewed by the AI Engine. Priority set to <span className="font-bold">{currentIncident.priority}</span>.
-                  </p>
-                </div>
-              )}
-              {currentIncident && (
-                <div className="p-3 bg-surface-2 border border-line rounded-lg">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold text-primary">Report Received</span>
-                    <span className="text-[10px] text-muted">{new Date(currentIncident.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                  </div>
-                  <p className="text-xs text-secondary leading-relaxed">
-                    Thank you for submitting. We have successfully logged your report to the transparent ledger.
-                  </p>
-                </div>
-              )}
-              {historyIncidents.length > 0 && (
-                <div className="p-3 bg-surface-2 border border-line rounded-lg opacity-70">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold text-primary">System Update</span>
-                    <span className="text-[10px] text-muted">Yesterday</span>
-                  </div>
-                  <p className="text-xs text-secondary leading-relaxed">
-                    A previous report you filed was marked as RESOLVED by the local authority.
-                  </p>
-                </div>
-              )}
+                );
+              })}
               
-              {!currentIncident && historyIncidents.length === 0 && (
+              {allNotifications.length === 0 && (
                 <div className="text-xs text-muted text-center py-6">
                   You're all caught up! No new notifications.
                 </div>
