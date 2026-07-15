@@ -781,3 +781,19 @@ Every AI output validated.
 # 20. Final Goal
 
 To build an explainable AI-powered Decision Intelligence Platform that transforms community incident reports into actionable, transparent, and intelligent decisions for governments and organizations.
+
+---
+
+Resilience Principle
+
+A failure in one module must never crash the platform.
+
+This applies to:
+
+AI failures → show graceful fallback.
+Dashboard failures → only dashboard degrades.
+Notification failures → notifications degrade, not the whole portal.
+Analytics failures → charts fail gracefully, the rest of the dashboard still works.
+Decision page failures → user can still navigate elsewhere.
+
+This is a hallmark of production-grade systems and aligns perfectly with the engineering maturity you've been building throughout the project.
