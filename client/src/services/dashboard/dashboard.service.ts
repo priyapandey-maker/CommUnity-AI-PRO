@@ -9,8 +9,48 @@ class DashboardService {
       const response = await apiClient.get('/ledger');
       const ledgerEntries: LedgerEntry[] = response.data || [];
 
+      const uniqueEntries = new Map<string, LedgerEntry>();
+      const timeline: TimelineEvent[] = [];
+      const seenIncidentsForTimeline = new Set<string>();
+
+      ledgerEntries.forEach((entry, idx: number) => {
+        // Build timeline
+        if (!seenIncidentsForTimeline.has(entry.incidentId)) {
+          seenIncidentsForTimeline.add(entry.incidentId);
+          timeline.push({
+            id: `EV-REP-${entry.incidentId}-${idx}`,
+            incidentId: entry.incidentId,
+            type: 'REPORTED',
+            title: 'Incident Reported',
+            description: `New incident reported for ${entry.issueType || 'General'}`,
+            timestamp: entry.timestamp,
+          });
+          timeline.push({
+            id: `EV-DEC-${entry.incidentId}-${idx}`,
+            incidentId: entry.incidentId,
+            type: 'DECISION',
+            title: 'AI Evaluation',
+            description: entry.recommendation || 'Evaluated by AI',
+            timestamp: new Date(new Date(entry.timestamp).getTime() + 1000).toISOString(),
+          });
+        } else {
+          timeline.push({
+            id: `EV-UPD-${entry.incidentId}-${idx}`,
+            incidentId: entry.incidentId,
+            type: 'STATUS_UPDATE',
+            title: 'Incident Updated',
+            description: `Status changed to ${entry.status}`,
+            timestamp: entry.timestamp,
+          });
+        }
+
+        uniqueEntries.set(entry.incidentId, entry);
+      });
+
+      const latestEntries = Array.from(uniqueEntries.values());
+
       // Map ledger entries to PriorityIncidents
-      const liveIncidents: PriorityIncident[] = ledgerEntries.map((entry) => ({
+      const liveIncidents: PriorityIncident[] = latestEntries.map((entry) => ({
         id: entry.incidentId,
         title: `${entry.issueType || 'General'} Incident`,
         category: entry.issueType || 'Other',
@@ -30,7 +70,7 @@ class DashboardService {
       );
 
       // Decisions
-      const decisions: DecisionSummary[] = ledgerEntries.map((entry, idx: number) => ({
+      const decisions: DecisionSummary[] = latestEntries.map((entry, idx: number) => ({
         id: `DEC-${entry.incidentId}-${idx}`,
         incidentId: entry.incidentId,
         incidentTitle: `${entry.issueType || 'General'} Incident`,
@@ -45,30 +85,11 @@ class DashboardService {
       }));
       decisions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-      // Timeline Events
-      const timeline: TimelineEvent[] = ledgerEntries.flatMap((entry, idx: number) => [
-        {
-          id: `EV-REP-${entry.incidentId}-${idx}`,
-          incidentId: entry.incidentId,
-          type: 'REPORTED',
-          title: 'Incident Reported',
-          description: `New incident reported for ${entry.issueType}`,
-          timestamp: entry.timestamp,
-        },
-        {
-          id: `EV-DEC-${entry.incidentId}-${idx}`,
-          incidentId: entry.incidentId,
-          type: 'DECISION',
-          title: 'AI Evaluation',
-          description: entry.recommendation || 'Evaluated by AI',
-          timestamp: new Date(new Date(entry.timestamp).getTime() + 1000).toISOString(),
-        }
-      ]);
       timeline.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       // Compute Trends (Group by date)
       const dateCounts: Record<string, number> = {};
-      ledgerEntries.forEach((entry) => {
+      latestEntries.forEach((entry) => {
         const dateStr = new Date(entry.timestamp).toLocaleDateString(undefined, { weekday: 'short' });
         dateCounts[dateStr] = (dateCounts[dateStr] || 0) + 1;
       });
@@ -76,13 +97,13 @@ class DashboardService {
 
       // Compute Category Distribution
       const categoryCounts: Record<string, number> = {};
-      ledgerEntries.forEach((entry) => {
+      latestEntries.forEach((entry) => {
         const cat = entry.issueType || 'Other';
         categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
       });
       const categoryDistribution = Object.keys(categoryCounts).map(category => ({
         category,
-        percentage: Math.round((categoryCounts[category] / ledgerEntries.length) * 100) || 0
+        percentage: Math.round((categoryCounts[category] / latestEntries.length) * 100) || 0
       }));
 
       // Departments Mocked with live counts

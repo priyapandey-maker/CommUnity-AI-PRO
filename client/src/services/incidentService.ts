@@ -98,5 +98,11 @@ export async function getLedger(): Promise<LedgerEntry[]> {
  */
 export async function getMyIncidents(): Promise<LedgerEntry[]> {
   const { data } = await apiClient.get<LedgerEntry[]>('/incident/my');
-  return data;
+  
+  const uniqueEntries = new Map<string, LedgerEntry>();
+  data.forEach((entry) => {
+    uniqueEntries.set(entry.incidentId, entry); // Keep the latest entry
+  });
+  
+  return Array.from(uniqueEntries.values());
 }
