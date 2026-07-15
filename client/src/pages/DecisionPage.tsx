@@ -7,7 +7,7 @@ import {
   Spinner,
   PrimaryButton,
 } from '@/components';
-import { getDecision, DecisionResponse, parseApiError } from '@/services';
+import { getDecision, DecisionResponse, parseApiError, getIncident, IncidentRecord } from '@/services';
 import type { EvidenceFactor } from '@community-ai/shared';
 
 // ── Icons ──────────────────────────────────────────────────
@@ -167,6 +167,7 @@ export default function DecisionPage() {
   const navigate = useNavigate();
 
   const [decisionRecord, setDecisionRecord] = useState<DecisionResponse | null>(null);
+  const [incidentRecord, setIncidentRecord] = useState<IncidentRecord | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -240,13 +241,17 @@ export default function DecisionPage() {
     },
   ];
 
-  const fetchDecision = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await getDecision(id);
-      setDecisionRecord(data);
+      const [decData, incData] = await Promise.all([
+        getDecision(id),
+        getIncident(id).catch(() => null as unknown as IncidentRecord) 
+      ]);
+      setDecisionRecord(decData);
+      setIncidentRecord(incData);
     } catch (err) {
       const parsed = parseApiError(err);
       setError(parsed.message);
@@ -256,8 +261,8 @@ export default function DecisionPage() {
   }, [id]);
 
   useEffect(() => {
-    fetchDecision();
-  }, [fetchDecision]);
+    fetchData();
+  }, [fetchData]);
 
   // Map factor names to nice readable titles and icons
   const getFactorMeta = (factor: string): { title: string; icon: JSX.Element } => {
@@ -335,7 +340,7 @@ export default function DecisionPage() {
                 : error}
             </p>
             <div className="flex justify-center gap-3">
-              <PrimaryButton size="md" onClick={fetchDecision} className="bg-red-600 hover:bg-red-500">
+              <PrimaryButton size="md" onClick={fetchData} className="bg-red-600 hover:bg-red-500">
                 <RefreshIcon />
                 Retry Lookup
               </PrimaryButton>
@@ -670,6 +675,85 @@ export default function DecisionPage() {
                 </div>
               </Card>
             </div>
+
+            {/* 7.5 Related Incident Details and Real Timeline */}
+            {incidentRecord && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Related Incident */}
+                <Card variant="default" padding="lg" className="h-full">
+                  <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
+                    Related Incident
+                  </h3>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
+                        Reported Location
+                      </span>
+                      <p className="text-sm text-secondary leading-relaxed bg-surface-2 p-3 rounded-lg border border-line">
+                        {incidentRecord.location}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
+                        Citizen Description
+                      </span>
+                      <p className="text-sm text-secondary leading-relaxed bg-surface-2 p-3 rounded-lg border border-line">
+                        {incidentRecord.description}
+                      </p>
+                    </div>
+                    {incidentRecord.image && (
+                      <div>
+                        <span className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1">
+                          Attached Evidence
+                        </span>
+                        <img 
+                          src={incidentRecord.image} 
+                          alt="Citizen evidence" 
+                          className="w-full h-auto max-h-48 object-cover rounded-lg border border-line mt-1" 
+                        />
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Authority Actions & Timeline */}
+                <Card variant="default" padding="lg" className="h-full">
+                  <h3 className="text-sm font-bold text-secondary font-display border-b border-line pb-2 mb-4">
+                    Operational Timeline & Authority Actions
+                  </h3>
+                  <div className="relative border-l border-line ml-3 flex flex-col gap-5">
+                    {incidentRecord.timeline && incidentRecord.timeline.length > 0 ? (
+                      incidentRecord.timeline.map((event, index: number) => (
+                        <div key={index} className="relative pl-6 animate-fade-in group">
+                          <span className="absolute -left-[9px] top-1 bg-surface-1 border-2 border-primary-500 w-4 h-4 rounded-full transition-all duration-150"></span>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-semibold text-primary">
+                                {event.action}
+                              </h4>
+                              <span className="text-[10px] text-muted">
+                                {new Date(event.timestamp).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-xs text-secondary leading-relaxed">
+                              Performed by: <span className="font-semibold text-primary">{event.performedBy}</span>
+                            </p>
+                            {event.details && (
+                              <p className="text-xs text-muted leading-relaxed bg-surface-2 p-2 rounded mt-1 border border-line">
+                                {event.details}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted pl-6">No operational timeline available.</p>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            )}
+
 
             {/* 8. Technical Metadata (Telemetry Metrics) */}
             <Card variant="default" padding="lg" className="flex flex-col gap-5 h-full">

@@ -101,7 +101,10 @@ export function IncidentTableRow({ incident, onActionComplete, showToast }: Inci
               </div>
             )}
           </div>
-          <button className="text-text-secondary hover:text-text-primary">
+          <button 
+            onClick={() => window.location.href = `/decision/${incident.id}`}
+            className="text-text-secondary hover:text-text-primary"
+          >
             View
           </button>
         </div>

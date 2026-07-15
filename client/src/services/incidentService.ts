@@ -106,3 +106,34 @@ export async function getMyIncidents(): Promise<LedgerEntry[]> {
   
   return Array.from(uniqueEntries.values());
 }
+
+export interface TimelineEntry {
+  action: string;
+  performedBy: string;
+  timestamp: string;
+  details?: string;
+}
+
+export interface IncidentRecord {
+  id: string;
+  userId?: string;
+  description: string;
+  location: string;
+  image?: string;
+  status: string;
+  priority: string;
+  decisionId?: string;
+  timeline: TimelineEntry[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * GET /incident/:id
+ *
+ * Fetches the full incident record including timeline and details.
+ */
+export async function getIncident(id: string): Promise<IncidentRecord> {
+  const { data } = await apiClient.get<IncidentRecord>(`/incident/${id}`);
+  return data;
+}

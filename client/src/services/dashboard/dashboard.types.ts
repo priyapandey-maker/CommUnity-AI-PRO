@@ -36,7 +36,7 @@ export interface DepartmentSummary {
 export interface TimelineEvent {
   id: string;
   incidentId: string;
-  type: 'REPORTED' | 'AI_ANALYSIS' | 'DECISION' | 'ESCALATION' | 'ASSIGNMENT' | 'RESOLUTION';
+  type: 'REPORTED' | 'AI_ANALYSIS' | 'DECISION' | 'ESCALATION' | 'ASSIGNMENT' | 'RESOLUTION' | 'STATUS_UPDATE';
   title: string;
   description: string;
   timestamp: string;
