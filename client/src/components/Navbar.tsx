@@ -134,6 +134,7 @@ export default function Navbar() {
               <button
                 onClick={logout}
                 className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                aria-label="Log out"
               >
                 Logout
               </button>
@@ -158,10 +159,9 @@ export default function Navbar() {
           {/* Theme toggle */}
           <button
             id="theme-toggle"
-            type="button"
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150 focus-ring"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150 focus-ring text-secondary"
+            aria-label="Toggle dark mode"
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>

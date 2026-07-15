@@ -6,6 +6,7 @@ import {
   Badge,
   Spinner,
   PrimaryButton,
+  SectionErrorBoundary,
 } from '@/components';
 import { getDecision, DecisionResponse, parseApiError, getIncident, IncidentRecord } from '@/services';
 import type { EvidenceFactor } from '@community-ai/shared';
@@ -289,8 +290,9 @@ export default function DecisionPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
+    <SectionErrorBoundary fallbackMessage="Failed to load Decision Page. Please try again.">
+      <div className="flex flex-col gap-6">
+        <div>
         {/* Navigation Breadcrumb */}
         <header className="mb-8 flex items-center justify-between">
           <button
@@ -811,6 +813,7 @@ export default function DecisionPage() {
       <footer className="mt-12 pt-5 border-t text-center text-xs text-muted border-line">
         CommUnity AI — Evidence-based decisions. Published to the public record.
       </footer>
-    </div>
+      </div>
+    </SectionErrorBoundary>
   );
 }

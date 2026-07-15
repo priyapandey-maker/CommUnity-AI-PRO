@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PageContainer, SectionTitle, Card, Badge, Spinner, PrimaryButton } from '@/components';
+import { PageContainer, SectionTitle, Card, Badge, Spinner, PrimaryButton, SectionErrorBoundary } from '@/components';
 import { dashboardService } from '@/services/dashboard/dashboard.service';
 import type { DashboardState } from '@/services/dashboard/dashboard.types';
 import { notificationService, AppNotification } from '@/services/notificationService';
@@ -176,8 +176,9 @@ export default function CitizenPortal() {
   const resolvedEvent = currentTimeline.find(t => t.type === 'RESOLUTION' || t.title.includes('Resolved'));
 
   return (
-    <PageContainer  className="py-8 md:py-12">
-      <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 animate-slide-up">
+    <SectionErrorBoundary fallbackMessage="Failed to load Citizen Portal. Please try again.">
+      <PageContainer  className="py-8 md:py-12">
+        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 animate-slide-up">
         <div>
           <SectionTitle
             badge="Citizen Portal"
@@ -359,11 +360,13 @@ export default function CitizenPortal() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="px-2 py-1 bg-surface-2 border border-line rounded text-xs text-primary focus:outline-none focus:border-brand-500 w-full sm:w-auto"
+                  aria-label="Search reports"
                 />
                 <select 
                   value={statusFilter} 
                   onChange={e => setStatusFilter(e.target.value)} 
                   className="px-2 py-1 bg-surface-2 border border-line rounded text-xs text-primary focus:outline-none"
+                  aria-label="Filter by status"
                 >
                   <option value="ALL">All Status</option>
                   <option value="PENDING">Pending</option>
@@ -375,6 +378,7 @@ export default function CitizenPortal() {
                   value={priorityFilter} 
                   onChange={e => setPriorityFilter(e.target.value)} 
                   className="px-2 py-1 bg-surface-2 border border-line rounded text-xs text-primary focus:outline-none"
+                  aria-label="Filter by priority"
                 >
                   <option value="ALL">All Priorities</option>
                   <option value="CRITICAL">Critical</option>
@@ -432,8 +436,17 @@ export default function CitizenPortal() {
                 return (
                   <div 
                     key={notif.id} 
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Notification: ${title}`}
                     onClick={() => handleNotificationClick(notif)}
-                    className={`p-3 border rounded-lg transition-all cursor-pointer ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNotificationClick(notif);
+                      }
+                    }}
+                    className={`p-3 border rounded-lg transition-all cursor-pointer focus-ring ${
                       notif.isRead ? 'opacity-60' : 'shadow-md shadow-brand-500/5 hover:scale-[1.02]'
                     } ${
                       isResolved ? 'bg-emerald-500/10 border-emerald-500/20' 
@@ -465,6 +478,7 @@ export default function CitizenPortal() {
         </div>
 
       </div>
-    </PageContainer>
+      </PageContainer>
+    </SectionErrorBoundary>
   );
 }

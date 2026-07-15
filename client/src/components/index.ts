@@ -11,6 +11,8 @@ export { default as PageHeader } from './PageHeader';
 export * from './FormField';
 export * from './ImageUpload';
 export * from './IncidentForm';
+export * from './GlobalErrorBoundary';
+export * from './SectionErrorBoundary';
 export { default as Navbar } from './Navbar';
 export * from './ProtectedRoute';
 export * from './RoleRoute';

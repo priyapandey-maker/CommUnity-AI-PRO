@@ -18,6 +18,7 @@ import {
   NoRecommendations
 } from '@/components/dashboard';
 import { TrendChart, CategoryPieChart, DepartmentBarChart, CommunityHeatmap } from '@/components/dashboard/charts';
+import { SectionErrorBoundary } from '@/components';
 
 export default function AuthorityDashboard() {
   const [data, setData] = useState<DashboardState | null>(null);
@@ -55,9 +56,10 @@ export default function AuthorityDashboard() {
   if (!data) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in relative">
-      {/* Toast Notification */}
-      {toast && (
+    <SectionErrorBoundary fallbackMessage="Failed to load Authority Dashboard. Please refresh the page.">
+      <div className="space-y-8 animate-fade-in relative">
+        {/* Toast Notification */}
+        {toast && (
         <div className={`fixed bottom-4 right-4 p-4 rounded-md shadow-lg z-50 text-white font-medium ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
           {toast.message}
         </div>
@@ -205,7 +207,8 @@ export default function AuthorityDashboard() {
             ))}
           </div>
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </SectionErrorBoundary>
   );
 }

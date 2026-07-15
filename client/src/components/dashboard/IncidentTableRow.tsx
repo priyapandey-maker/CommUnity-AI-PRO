@@ -69,6 +69,7 @@ export function IncidentTableRow({ incident, onActionComplete, showToast }: Inci
           onChange={handleStatusChange}
           disabled={loading}
           className="text-xs font-semibold px-2 py-1 rounded bg-surface-2 border border-line text-text-primary focus:outline-none focus:ring-1 focus:ring-blue-500"
+          aria-label={`Update status for incident ${incident.id}`}
         >
           <option value="PENDING">PENDING</option>
           <option value="IN_PROGRESS">IN_PROGRESS</option>
@@ -84,26 +85,29 @@ export function IncidentTableRow({ incident, onActionComplete, showToast }: Inci
           <div className="relative">
             <button 
               onClick={() => setShowAssignModal(!showAssignModal)}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50 focus-ring rounded"
               disabled={loading}
+              aria-expanded={showAssignModal}
+              aria-label={`Assign incident ${incident.id}`}
             >
               Assign
             </button>
             {showAssignModal && (
               <div className="absolute right-0 top-full mt-2 w-40 bg-surface-1 border border-line rounded-lg shadow-xl z-50 p-2 text-left">
                 <div className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2 px-2">Assign to</div>
-                <button onClick={() => handleAssign('Police Dept')} className="block w-full text-left px-2 py-1 text-sm text-text-primary hover:bg-surface-2 rounded">Police Dept</button>
-                <button onClick={() => handleAssign('Fire Dept')} className="block w-full text-left px-2 py-1 text-sm text-text-primary hover:bg-surface-2 rounded">Fire Dept</button>
-                <button onClick={() => handleAssign('Medical Dept')} className="block w-full text-left px-2 py-1 text-sm text-text-primary hover:bg-surface-2 rounded">Medical</button>
-                <button onClick={() => handleAssign('Public Works')} className="block w-full text-left px-2 py-1 text-sm text-text-primary hover:bg-surface-2 rounded">Public Works</button>
+                <button onClick={() => handleAssign('Police Dept')} className="block w-full text-left px-2 py-1 text-sm text-text-primary hover:bg-surface-2 rounded focus-ring">Police Dept</button>
+                <button onClick={() => handleAssign('Fire Dept')} className="block w-full text-left px-2 py-1 text-sm text-text-primary hover:bg-surface-2 rounded focus-ring">Fire Dept</button>
+                <button onClick={() => handleAssign('Medical Dept')} className="block w-full text-left px-2 py-1 text-sm text-text-primary hover:bg-surface-2 rounded focus-ring">Medical</button>
+                <button onClick={() => handleAssign('Public Works')} className="block w-full text-left px-2 py-1 text-sm text-text-primary hover:bg-surface-2 rounded focus-ring">Public Works</button>
                 <hr className="my-1 border-line" />
-                <button onClick={() => setShowAssignModal(false)} className="block w-full text-left px-2 py-1 text-sm text-red-500 hover:bg-red-500/10 rounded">Cancel</button>
+                <button onClick={() => setShowAssignModal(false)} className="block w-full text-left px-2 py-1 text-sm text-red-500 hover:bg-red-500/10 rounded focus-ring" aria-label="Cancel assignment">Cancel</button>
               </div>
             )}
           </div>
           <button 
             onClick={() => window.location.href = `/decision/${incident.id}`}
-            className="text-text-secondary hover:text-text-primary"
+            className="text-text-secondary hover:text-text-primary focus-ring rounded"
+            aria-label={`View incident ${incident.id}`}
           >
             View
           </button>

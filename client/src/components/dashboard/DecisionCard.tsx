@@ -84,14 +84,16 @@ export function DecisionCard({ decision, onActionComplete, showToast }: Decision
         <button 
           onClick={() => handleAction('REJECT')}
           disabled={loading || decision.status !== 'PENDING_REVIEW'}
-          className="px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-2 rounded-md transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-2 rounded-md transition-colors disabled:opacity-50 focus-ring"
+          aria-label={`Reject decision for incident ${decision.incidentId}`}
         >
           Reject
         </button>
         <button 
           onClick={() => handleAction('APPROVE')}
           disabled={loading || decision.status !== 'PENDING_REVIEW'}
-          className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm disabled:opacity-50 focus-ring"
+          aria-label={`Approve decision for incident ${decision.incidentId}`}
         >
           Approve Decision
         </button>
