@@ -8,7 +8,12 @@
 // ── Legacy Components (Required by scaffolded pages) ──────
 export { default as Button } from './Button';
 export { default as PageHeader } from './PageHeader';
+export * from './FormField';
+export * from './ImageUpload';
+export * from './IncidentForm';
 export { default as Navbar } from './Navbar';
+export * from './ProtectedRoute';
+export * from './RoleRoute';
 
 // ── Components ────────────────────────────────────────────
 export { PrimaryButton   } from './ui/PrimaryButton';

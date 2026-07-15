@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
+import { useAuth } from '../hooks';
 
 // ── Theme helpers ─────────────────────────────────────────
 
@@ -37,19 +38,11 @@ function MoonIcon() {
   );
 }
 
-// ── Nav links ─────────────────────────────────────────────
-
-const NAV_LINKS = [
-  { to: '/submit', label: 'Report Incident' },
-  { to: '/ledger', label: 'Decision Ledger' },
-  { to: '/authority', label: 'Authority Dashboard' },
-];
-
-
 // ── Component ─────────────────────────────────────────────
 
 export default function Navbar() {
   const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme);
+  const { user, logout } = useAuth();
 
   // Apply theme on mount and whenever it changes
   useEffect(() => {
@@ -57,6 +50,13 @@ export default function Navbar() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+
+  const navLinks = [
+    { to: '/ledger', label: 'Decision Ledger', show: true },
+    { to: '/submit', label: 'Report Incident', show: !!user },
+    { to: '/portal', label: 'My Reports', show: !!user && user.role === 'CITIZEN' },
+    { to: '/authority', label: 'Authority Dashboard', show: !!user && (user.role === 'AUTHORITY' || user.role === 'ADMIN') },
+  ].filter(link => link.show);
 
   return (
     <header
@@ -98,7 +98,7 @@ export default function Navbar() {
         {/* Links + Theme toggle */}
         <div className="flex items-center gap-2">
           <ul className="flex items-center gap-1" role="list">
-            {NAV_LINKS.map(({ to, label }) => (
+            {navLinks.map(({ to, label }) => (
               <li key={to}>
                 <NavLink
                   to={to}
@@ -117,6 +117,36 @@ export default function Navbar() {
               </li>
             ))}
           </ul>
+
+          {/* Divider */}
+          <span
+            className="mx-1.5 h-4 w-px bg-line-strong"
+            aria-hidden="true"
+          />
+
+          {/* Auth Actions */}
+          {user ? (
+            <div className="flex items-center gap-3 ml-2">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block">
+                {user.name}
+              </span>
+              <button
+                onClick={logout}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 ml-2">
+              <Link
+                to="/login"
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                Sign In
+              </Link>
+            </div>
+          )}
 
           {/* Divider */}
           <span

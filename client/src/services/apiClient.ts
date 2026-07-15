@@ -12,6 +12,14 @@ const apiClient = axios.create({
   timeout: 15_000,
 });
 
+// ── Request interceptor ───────────────────────────────────
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 // ── Response interceptor ──────────────────────────────────
 apiClient.interceptors.response.use(
