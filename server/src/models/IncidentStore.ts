@@ -1,3 +1,10 @@
+export interface TimelineEntry {
+  action: string;
+  performedBy: string;
+  timestamp: Date;
+  details?: string;
+}
+
 export interface IncidentRecord {
   id: string;
   userId?: string;
@@ -7,6 +14,7 @@ export interface IncidentRecord {
   status: string;
   priority: string;
   decisionId?: string;
+  timeline: TimelineEntry[];
   createdAt: Date;
   updatedAt: Date;
 }

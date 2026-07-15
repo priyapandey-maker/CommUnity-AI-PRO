@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { orchestrator } from '../services/AIOrchestrator';
 import { incidentStore, IncidentRecord } from '../models/IncidentStore';
 import { Role } from '@community-ai/shared';
+import { ledgerService } from '../services/ledgerService';
+import { decisionStoreService } from '../services/decisionStoreService';
 
 /**
  * Controller to handle incident creation request.
@@ -44,6 +46,11 @@ export const createIncident = async (
         status: 'ANALYZED',
         priority: result.decision?.priority || 'UNKNOWN',
         decisionId: result.incidentId,
+        timeline: [{
+          action: 'Incident Submitted',
+          performedBy: req.user?.id || 'System',
+          timestamp: new Date()
+        }],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -56,7 +63,6 @@ export const createIncident = async (
   }
 };
 
-import { ledgerService } from '../services/ledgerService';
 
 export const getMyIncidents = (req: Request, res: Response): void => {
   const userId = req.user?.id;
@@ -91,51 +97,81 @@ export const getIncidentById = async (req: Request, res: Response): Promise<void
   res.status(200).json(incident);
 };
 
-export const updateIncidentStatus = async (req: Request, res: Response): Promise<void> => {
-  if (!req.user || (req.user.role !== Role.AUTHORITY && req.user.role !== Role.ADMIN)) {
-    res.status(403).json({ error: 'Forbidden' });
+const updateIncidentState = (
+  req: Request,
+  res: Response,
+  actionMsg: string,
+  newStatus: string,
+  extraDetails?: string
+) => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
     return;
   }
 
   const { id } = req.params;
-  const { status, department } = req.body;
-
   const incident = incidentStore.find(i => i.id === id);
-  if (incident) {
-    if (status) incident.status = status;
-    incident.updatedAt = new Date();
+
+  if (!incident) {
+    res.status(404).json({ error: 'Incident not found' });
+    return;
   }
 
-  const ledgerEntry = ledgerService.getEntries().find(e => e.incidentId === id);
-  if (ledgerEntry) {
-    if (status) ledgerEntry.status = status;
-    if (department) ledgerEntry.department = department;
-  }
+  incident.status = newStatus;
+  incident.updatedAt = new Date();
+  
+  const timelineAction = actionMsg;
+  incident.timeline.push({
+    action: timelineAction,
+    performedBy: req.user.id,
+    timestamp: new Date(),
+    details: extraDetails
+  });
 
-  res.status(200).json({ success: true, status });
+  const decisionData = decisionStoreService.getDecision(incident.id);
+  
+  ledgerService.addEntry({
+    incidentId: incident.id,
+    issueType: decisionData?.analysis.issueType || 'Unknown',
+    priority: incident.priority,
+    recommendation: decisionData?.decision.recommendation || '',
+    decisionReadiness: decisionData?.decision.decisionReadiness || 'LOW',
+    status: newStatus,
+    userId: req.user.id
+  });
+
+  res.status(200).json(incident);
 };
 
-export const processDecision = async (req: Request, res: Response): Promise<void> => {
-  if (!req.user || (req.user.role !== Role.AUTHORITY && req.user.role !== Role.ADMIN)) {
-    res.status(403).json({ error: 'Forbidden' });
+export const acceptIncident = async (req: Request, res: Response): Promise<void> => {
+  updateIncidentState(req, res, 'Accepted by Authority', 'Accepted');
+};
+
+export const rejectIncident = async (req: Request, res: Response): Promise<void> => {
+  updateIncidentState(req, res, 'Rejected by Authority', 'Rejected');
+};
+
+export const assignIncident = async (req: Request, res: Response): Promise<void> => {
+  const { department } = req.body;
+  if (!department) {
+    res.status(400).json({ error: 'Department is required for assignment' });
     return;
   }
+  updateIncidentState(req, res, 'Assigned to Department', 'Assigned', `Department: ${department}`);
+};
 
-  const { id } = req.params;
-  const { action } = req.body; // 'APPROVE' or 'REJECT'
-
-  const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
-
-  const incident = incidentStore.find(i => i.id === id);
-  if (incident) {
-    incident.status = newStatus;
-    incident.updatedAt = new Date();
+export const updateIncidentStatus = async (req: Request, res: Response): Promise<void> => {
+  const { status } = req.body;
+  if (!status) {
+    res.status(400).json({ error: 'Status is required' });
+    return;
   }
-
-  const ledgerEntry = ledgerService.getEntries().find(e => e.incidentId === id);
-  if (ledgerEntry) {
-    ledgerEntry.status = newStatus;
-  }
-
-  res.status(200).json({ success: true, status: newStatus });
+  // Standardize the action message based on status if possible
+  const actionMsg = status === 'In Progress' 
+    ? 'Status changed to In Progress' 
+    : status === 'Resolved' 
+      ? 'Status changed to Resolved' 
+      : `Status changed to ${status}`;
+      
+  updateIncidentState(req, res, actionMsg, status);
 };

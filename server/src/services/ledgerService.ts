@@ -14,11 +14,11 @@ export class LedgerService {
   /**
    * Appends a new decision record to the in-memory ledger database.
    */
-  public addEntry(entry: Omit<LedgerEntry, 'timestamp' | 'status'>): LedgerEntry {
+  public addEntry(entry: Omit<LedgerEntry, 'timestamp' | 'status'> & { status?: string }): LedgerEntry {
     const newEntry: LedgerEntry = {
       ...entry,
+      status: entry.status || 'received',
       timestamp: new Date().toISOString(),
-      status: 'received',
     };
     this.ledger.push(newEntry);
     return newEntry;
