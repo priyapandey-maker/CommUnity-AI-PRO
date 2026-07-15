@@ -6,7 +6,11 @@ import {
   analyzeRouter,
   decisionRouter,
   ledgerRouter,
+  authRouter,
 } from './routes';
+import { authMiddleware } from './middleware/authMiddleware';
+import { roleMiddleware } from './middleware/roleMiddleware';
+import { Role } from '@community-ai/shared';
 import { errorHandler } from './middleware/errorHandler';
 
 const app: Application = express();
@@ -24,10 +28,11 @@ app.use(express.json());
 
 // ── Routes ──────────────────────────────────────────────────
 app.use('/health', healthRouter);
-app.use('/incident', incidentRouter);
-app.use('/analyze', analyzeRouter);
-app.use('/decision', decisionRouter);
-app.use('/ledger', ledgerRouter);
+app.use('/api/auth', authRouter);
+app.use('/incident', incidentRouter); // Depending on requirement, incidents could be created by anyone, but let's keep it open for now or add auth if needed. The prompt says "Protect authority and admin routes".
+app.use('/analyze', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), analyzeRouter);
+app.use('/decision', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), decisionRouter);
+app.use('/ledger', authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN]), ledgerRouter);
 
 // ── Error handler (must be last) ────────────────────────────
 app.use(errorHandler);

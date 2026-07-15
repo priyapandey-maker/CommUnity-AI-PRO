@@ -1,5 +1,6 @@
 import type { DecisionResult } from './decisionTypes';
 export * from './decisionTypes';
+export * from './authTypes';
 
 export type AnalysisSource = 'gemini' | 'fallback';
 
