@@ -7,6 +7,8 @@ import {
   decisionRouter,
   ledgerRouter,
   authRouter,
+  notificationRouter,
+  analyticsRouter,
 } from './routes';
 import { authMiddleware } from './middleware/authMiddleware';
 import { roleMiddleware } from './middleware/roleMiddleware';
@@ -36,6 +38,8 @@ app.use('/decision', authMiddleware, decisionRouter);
 app.use('/api/decision', authMiddleware, decisionRouter);
 app.use('/ledger', authMiddleware, ledgerRouter);
 app.use('/api/ledger', authMiddleware, ledgerRouter);
+app.use('/api/notifications', notificationRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // ── Error handler (must be last) ────────────────────────────
 app.use(errorHandler);

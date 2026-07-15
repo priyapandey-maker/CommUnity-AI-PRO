@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { orchestrator } from '../services/AIOrchestrator';
 import { incidentStore, IncidentRecord } from '../models/IncidentStore';
 import { Role } from '@community-ai/shared';
+import { orchestrator } from '../services/AIOrchestrator';
 import { ledgerService } from '../services/ledgerService';
 import { decisionStoreService } from '../services/decisionStoreService';
+import { notificationService } from '../services/notificationService';
+import { analyticsService } from '../services/analyticsService';
 
 /**
  * Controller to handle incident creation request.
@@ -55,6 +57,7 @@ export const createIncident = async (
         updatedAt: new Date(),
       };
       incidentStore.push(record);
+      analyticsService.refreshAnalytics();
     }
 
     res.status(201).json(result);
@@ -140,6 +143,21 @@ const updateIncidentState = (
     userId: req.user.id
   });
 
+  if (incident.userId) {
+    let type: 'STATUS_CHANGE' | 'ASSIGNMENT' | 'RESOLUTION' | 'SYSTEM' = 'STATUS_CHANGE';
+    if (newStatus === 'Assigned') type = 'ASSIGNMENT';
+    if (newStatus === 'Resolved') type = 'RESOLUTION';
+    
+    notificationService.createNotification(
+      incident.userId,
+      `Your incident has an update: ${actionMsg}`,
+      type,
+      incident.id
+    );
+  }
+
+  analyticsService.refreshAnalytics();
+
   res.status(200).json(incident);
 };
 
@@ -174,4 +192,37 @@ export const updateIncidentStatus = async (req: Request, res: Response): Promise
       : `Status changed to ${status}`;
       
   updateIncidentState(req, res, actionMsg, status);
+};
+
+export const getDepartmentQueue = (req: Request, res: Response): void => {
+  if (!req.user || (req.user.role !== Role.AUTHORITY && req.user.role !== Role.ADMIN)) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  const { department } = req.params;
+  const queue = ledgerService.getEntries().filter(e => e.department === department || e.recommendation.includes(department));
+  const incidentIds = queue.map(e => e.incidentId);
+  const incidents = incidentStore.filter(i => incidentIds.includes(i.id));
+  res.status(200).json(incidents);
+};
+
+export const getFilteredIncidents = (req: Request, res: Response): void => {
+  if (!req.user || (req.user.role !== Role.AUTHORITY && req.user.role !== Role.ADMIN)) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  const { status, priority } = req.query;
+  let filtered = [...incidentStore];
+  
+  if (status) {
+    filtered = filtered.filter(i => i.status === status);
+  }
+  if (priority) {
+    filtered = filtered.filter(i => i.priority === priority);
+  }
+  
+  // Sort by newest first
+  filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  
+  res.status(200).json(filtered);
 };

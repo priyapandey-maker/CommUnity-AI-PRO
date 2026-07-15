@@ -6,7 +6,9 @@ import {
   acceptIncident,
   rejectIncident,
   assignIncident,
-  updateIncidentStatus
+  updateIncidentStatus,
+  getDepartmentQueue,
+  getFilteredIncidents
 } from '../controllers/incidentController';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { optionalAuthMiddleware } from '../middleware/optionalAuthMiddleware';
@@ -17,6 +19,8 @@ export const incidentRouter = Router();
 
 incidentRouter.post('/', optionalAuthMiddleware, createIncident);
 incidentRouter.get('/my', authMiddleware, getMyIncidents);
+incidentRouter.get('/filter', authMiddleware, getFilteredIncidents);
+incidentRouter.get('/department/:department', authMiddleware, getDepartmentQueue);
 incidentRouter.get('/:id', authMiddleware, getIncidentById);
 const authorityAuth = [authMiddleware, roleMiddleware([Role.AUTHORITY, Role.ADMIN])];
 
